@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rhythm Game</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #fff;
+        font-family: Arial, sans-serif;
+      }
+      #menu {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+      #menu select,
+      #menu button {
+        margin: 10px;
+        padding: 10px;
+        font-size: 16px;
+      }
+      #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        border: 1px solid #333;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        background-color: #fff;
+        visibility: hidden; /* 初期状態では非表示 */
+      }
+      .lane {
+        border-left: 2px solid #ccc;
+        position: relative;
+      }
+      .lane:last-child {
+        border-right: 2px solid #ccc;
+      }
+      .note {
+        position: absolute;
+        width: 100%;
+        height: 50px;
+        background-color: #000;
+        z-index: 1;
+      }
+      #start-button {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        background-color: #008cba;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="menu">
+      <h1>Rhythm Game</h1>
+      <select id="track-select">
+        <option value="track1">Track 1</option>
+        <option value="track2">Track 2</option>
+        <option value="track3">Track 3</option>
+        <option value="track4">Track 4</option>
+      </select>
+      <button id="start-menu-button">Start Game</button>
+    </div>
+    <div id="game-container">
+      <div class="lane" data-key="key1"></div>
+      <div class="lane" data-key="key2"></div>
+      <div class="lane" data-key="key3"></div>
+      <div class="lane" data-key="key4"></div>
+    </div>
+    <audio id="audio"></audio>
+    <script>
+      const trackData = {
+        track1: { mp3: "./data/1.mp3", json: "./data/1.json" },
+        track2: { mp3: "./data/2.mp3", json: "./data/2.json" },
+        track3: { mp3: "./data/3.mp3", json: "./data/3.json" },
+        track4: { mp3: "./data/4.mp3", json: "./data/4.json" },
+      };
+
+      const menu = document.getElementById("menu");
+      const trackSelect = document.getElementById("track-select");
+      const startMenuButton = document.getElementById("start-menu-button");
+      const gameContainer = document.getElementById("game-container");
+      const startButton = document.getElementById("start-button");
+      const audio = document.getElementById("audio");
+
+      let selectedTrack = trackData["track1"];
+      let notes = [];
+      let gameStartTime = null;
+      let score = 0;
+
+      startMenuButton.addEventListener("click", () => {
+        const selectedTrackKey = trackSelect.value;
+        selectedTrack = trackData[selectedTrackKey];
+
+        menu.style.display = "none"; // メニューを非表示
+        gameContainer.style.visibility = "visible"; // ゲーム画面を表示
+        audio.src = selectedTrack.mp3; // 選択した曲を設定
+      });
+
+      startMenuButton.addEventListener("click", async () => {
+        score = 0;
+        startMenuButton.style.display = "none";
+
+        audio.play();
+
+        // 選択した曲に対応するJSONデータをロード
+        const response = await fetch(selectedTrack.json);
+        const noteData = await response.json();
+        spawnNotes(noteData);
+
+        gameStartTime = performance.now();
+
+        // ゲームループ
+        function gameLoop() {
+          updateNotes(); // ノートの位置を更新
+          requestAnimationFrame(gameLoop);
+        }
+        requestAnimationFrame(gameLoop);
+      });
+
+      function spawnNotes(noteData) {
+        noteData.forEach((note) => {
+          const lane = document.querySelector(`.lane[data-key="${note.type}"]`);
+          const noteElement = document.createElement("div");
+          noteElement.classList.add("note");
+          noteElement.style.transform = "translateY(-40px)";
+          noteElement.dataset.msec = note.msec;
+
+          noteElement.addEventListener("click", function (event) {
+            event.stopPropagation();
+            const elapsedTime = performance.now() - gameStartTime;
+            const noteMsec = parseInt(noteElement.dataset.msec);
+            const diff = Math.abs(elapsedTime - noteMsec);
+
+            if (diff <= 100) {
+              score += diff <= 50 ? 10 : 5;
+              console.log(`Hit! Score: ${score}`);
+              noteElement.remove();
+            } else {
+              console.log(`Miss!`);
+            }
+          });
+
+          lane.appendChild(noteElement);
+        });
+      }
+
+      function updateNotes() {
+        const elapsedTime = performance.now() - gameStartTime;
+        const speed = 0.3;
+        document.querySelectorAll(".note").forEach((note) => {
+          const noteMsec = parseInt(note.dataset.msec);
+          const distance = (elapsedTime - noteMsec) * speed;
+
+          if (distance > window.innerHeight) {
+            note.remove();
+          } else {
+            note.style.transform = `translateY(${distance}px)`;
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
