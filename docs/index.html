@@ -52,6 +52,20 @@
         background-color: #000;
         z-index: 1;
       }
+      .hit-button {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 60px;
+        background-color: #d8f2ff;
+        opacity: 0.5;
+        border: 2px solid #aaa;
+        text-align: center;
+        line-height: 60px;
+        font-size: 18px;
+        cursor: pointer;
+        z-index: 2;
+      }
       #start-button {
         position: absolute;
         top: 10px;
@@ -63,6 +77,44 @@
         color: #fff;
         cursor: pointer;
         font-size: 16px;
+      }
+      #back-to-top {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 15px;
+        background-color: #008cba;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 1000;
+        display: none;
+      }
+      .feedback {
+        position: absolute;
+        bottom: 80px; /* ボタンの少し上 */
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 20px;
+        font-weight: bold;
+        color: #db3030;
+        opacity: 1;
+        animation: feedbackAnimation 1s ease-out forwards;
+        pointer-events: none; /* クリックできないようにする */
+      }
+
+      /* フィードバックのアニメーション */
+      @keyframes feedbackAnimation {
+        0% {
+          transform: translate(-50%, 0); /* 初期位置 */
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-50%, -50px); /* 上に移動 */
+          opacity: 0; /* フェードアウト */
+        }
       }
     </style>
   </head>
@@ -78,11 +130,20 @@
       <button id="start-menu-button">Start Game</button>
     </div>
     <div id="game-container">
-      <div class="lane" data-key="key1"></div>
-      <div class="lane" data-key="key2"></div>
-      <div class="lane" data-key="key3"></div>
-      <div class="lane" data-key="key4"></div>
+      <div class="lane" data-key="key1">
+        <div class="hit-button" data-key="key1"></div>
+      </div>
+      <div class="lane" data-key="key2">
+        <div class="hit-button" data-key="key2"></div>
+      </div>
+      <div class="lane" data-key="key3">
+        <div class="hit-button" data-key="key3"></div>
+      </div>
+      <div class="lane" data-key="key4">
+        <div class="hit-button" data-key="key4"></div>
+      </div>
     </div>
+    <button id="back-to-top">Back</button>
     <audio id="audio"></audio>
     <script>
       const trackData = {
@@ -96,7 +157,7 @@
       const trackSelect = document.getElementById("track-select");
       const startMenuButton = document.getElementById("start-menu-button");
       const gameContainer = document.getElementById("game-container");
-      const startButton = document.getElementById("start-button");
+      const backToTopButton = document.getElementById("back-to-top");
       const audio = document.getElementById("audio");
 
       let selectedTrack = trackData["track1"];
@@ -111,62 +172,66 @@
         menu.style.display = "none"; // メニューを非表示
         gameContainer.style.visibility = "visible"; // ゲーム画面を表示
         audio.src = selectedTrack.mp3; // 選択した曲を設定
+        backToTopButton.style.display = "block";
       });
-
-      startMenuButton.addEventListener("click", async () => {
+      backToTopButton.addEventListener("click", () => {
+        menu.style.display = "block";
+        gameContainer.style.visibility = "hidden";
+        backToTopButton.style.display = "none";
+        notes = [];
+        gameStartTime = null;
         score = 0;
-        startMenuButton.style.display = "none";
-
-        audio.play();
+        document.querySelectorAll(".note").forEach((note) => {
+          note.remove();
+        });
+        audio.pause();
+      });
+      async function startGame() {
+        score = 0;
 
         // 選択した曲に対応するJSONデータをロード
         const response = await fetch(selectedTrack.json);
         const noteData = await response.json();
-        spawnNotes(noteData);
 
+        // 3秒の遅延分をすべてのノートのタイミングに加算
+        noteData.forEach((note) => {
+          note.msec += 3000;
+        });
+        spawnNotes(noteData);
         gameStartTime = performance.now();
 
-        // ゲームループ
+        setTimeout(() => {
+          audio.play();
+        }, 3000);
         function gameLoop() {
+          if (!gameStartTime) return;
           updateNotes(); // ノートの位置を更新
           requestAnimationFrame(gameLoop);
         }
         requestAnimationFrame(gameLoop);
-      });
+      }
+
+      const containerHeight = window.innerHeight - 60; // 画面の高さ
+      const speed = 0.3; // ノートの移動速度 (ピクセル/ミリ秒)
+      const timeToReachBottom = containerHeight / speed; // 画面下までの移動時間
 
       function spawnNotes(noteData) {
         noteData.forEach((note) => {
           const lane = document.querySelector(`.lane[data-key="${note.type}"]`);
           const noteElement = document.createElement("div");
           noteElement.classList.add("note");
-          noteElement.style.transform = "translateY(-40px)";
+          const initialOffset = note.msec * speed;
+          noteElement.style.transform = `translateY(${initialOffset}px)`;
           noteElement.dataset.msec = note.msec;
-
-          noteElement.addEventListener("click", function (event) {
-            event.stopPropagation();
-            const elapsedTime = performance.now() - gameStartTime;
-            const noteMsec = parseInt(noteElement.dataset.msec);
-            const diff = Math.abs(elapsedTime - noteMsec);
-
-            if (diff <= 100) {
-              score += diff <= 50 ? 10 : 5;
-              console.log(`Hit! Score: ${score}`);
-              noteElement.remove();
-            } else {
-              console.log(`Miss!`);
-            }
-          });
-
           lane.appendChild(noteElement);
         });
       }
 
       function updateNotes() {
         const elapsedTime = performance.now() - gameStartTime;
-        const speed = 0.3;
         document.querySelectorAll(".note").forEach((note) => {
           const noteMsec = parseInt(note.dataset.msec);
-          const distance = (elapsedTime - noteMsec) * speed;
+          const distance = (elapsedTime - noteMsec + timeToReachBottom) * speed;
 
           if (distance > window.innerHeight) {
             note.remove();
@@ -175,6 +240,54 @@
           }
         });
       }
+
+      // 打鍵ボタンのクリック判定
+      document.querySelectorAll(".hit-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const laneKey = button.dataset.key;
+          const lane = document.querySelector(`.lane[data-key="${laneKey}"]`);
+          const notesInLane = lane.querySelectorAll(".note");
+          if (notesInLane.length === 0) return;
+
+          const closestNote = notesInLane[0];
+          const elapsedTime = performance.now() - gameStartTime;
+          const noteMsec = parseInt(closestNote.dataset.msec);
+          const diff = Math.abs(elapsedTime - noteMsec);
+          console.log(diff);
+
+          let feedbackText = "Bad";
+          if (diff <= 50) {
+            score += 10;
+            feedbackText = "Excellent";
+          } else if (diff <= 100) {
+            score += 5;
+            feedbackText = "Great";
+          } else if (diff <= 500) {
+            score += 5;
+            feedbackText = "Good";
+          }
+
+          // 文字を表示
+          showFeedback(lane, feedbackText);
+
+          console.log(`Hit! Score: ${score}`);
+          closestNote.remove();
+        });
+      });
+
+      function showFeedback(lane, text) {
+        const feedback = document.createElement("div");
+        feedback.textContent = text;
+        feedback.classList.add("feedback");
+        lane.appendChild(feedback);
+
+        // 1秒後に削除
+        setTimeout(() => {
+          feedback.remove();
+        }, 1000);
+      }
+
+      startMenuButton.addEventListener("click", startGame);
     </script>
   </body>
 </html>
