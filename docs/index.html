@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Rhythm Game</title>
     <style>
       body {
@@ -80,7 +81,7 @@
       }
       .feedback {
         position: absolute;
-        bottom: 80px; /* ボタンの少し上 */
+        bottom: 80px;
         left: 50%;
         transform: translateX(-50%);
         font-size: 20px;
@@ -160,14 +161,25 @@
       let gameStartTime = null;
       let score = 0;
 
-      // --------------------------------------------------
-      // カウントダウン後、音源再生開始から note.start_msec で
-      //   => ノートが画面下 -100px に到達
-      // approachTime = ノートが画面上から下 -100px に到達するまでの時間
-      // --------------------------------------------------
-      const approachTime = 2000; // 2秒で下まで到達するとする
+      // カウントダウン後に再生開始 => 3秒後
+      const countdownMs = 3000;
 
-      // ボタン: Start Game
+      // ノートが下-100px に到達するちょうどの時刻 = note.start_msec
+      // => そこに至る "アプローチ時間" を設ける (例: 1小節分)
+      // => 例: 4拍子(4拍) => measureMs = (60000/tempo)*4
+      function getApproachTime() {
+        const beatsPerMeasure = 4;
+        const measureMs = (60000 / tempo) * beatsPerMeasure;
+        return measureMs; // 1小節分落とす
+      }
+
+      function getSpeed() {
+        // 移動距離 = 画面上( y=0 ) -> 画面下 -100px
+        const distance = window.innerHeight - 100;
+        const approachMs = getApproachTime();
+        return distance / approachMs; // px/ms
+      }
+
       startMenuButton.addEventListener("click", () => {
         const selectedTrackKey = trackSelect.value;
         selectedTrack = trackData[selectedTrackKey];
@@ -179,7 +191,6 @@
         audio.src = selectedTrack.mp3;
       });
 
-      // Backボタン
       backToTopButton.addEventListener("click", () => {
         menu.style.display = "block";
         gameContainer.style.visibility = "hidden";
@@ -192,37 +203,60 @@
         audio.currentTime = 0;
       });
 
-      // ゲーム開始
       async function startGame() {
         score = 0;
 
-        // JSONロード
+        // JSONデータ読み込み
         const response = await fetch(selectedTrack.json);
         const jsonData = await response.json();
 
-        tempo = jsonData.metadata.tempo;
+        tempo = jsonData.metadata.tempo || 120.0;
         notes = jsonData.notes;
 
-        // 3秒カウントダウン後に曲を再生するために +3,000ms シフト
-        // さらに approachTime (2秒) だけ上から降らせる時間を確保
-        // => 実際には note.start_msec が「ノートが下 -100px に来る瞬間」
-        // => そこに至る 2秒前に 画面外(上)に配置し始める
+        // 3秒後にオーディオ再生 => ノート時刻を +3000 シフト
         notes.forEach((note) => {
-          // 例: note.start_msec=1000 => 実際には (1000 - approachTime) ms に上端に居る
-          note.start_msec += 3000;
-          note.end_msec += 3000;
+          note.start_msec += countdownMs;
+          note.end_msec += countdownMs;
         });
 
         spawnNotes(notes);
 
         gameStartTime = performance.now();
 
-        // 3秒後に再生
         setTimeout(() => {
           audio.play().catch((e) => console.log(e));
-        }, 3000);
+        }, countdownMs - 500);
 
         requestAnimationFrame(gameLoop);
+      }
+
+      function spawnNotes(noteData) {
+        const speed = getSpeed();
+        const approachTime = getApproachTime();
+
+        noteData.forEach((note) => {
+          const lane = document.querySelector(`.lane[data-key="${note.type}"]`);
+          if (!lane) return;
+          if (!note.duration_msec) return;
+
+          const noteElement = document.createElement("div");
+          noteElement.classList.add("note");
+
+          // duration_msec 分ノートを縦に伸ばす (お好みで調整)
+          // ここでは "ノート長 = duration_msec * speed / 2" とか
+          const noteHeight = Math.max(
+            20,
+            ((note.duration_msec || 0) * speed) / 2
+          );
+          noteElement.style.height = noteHeight + "px";
+
+          // dataset に保存
+          // note.start_msec => ノートが (window.innerHeight - 100) に到達する時刻
+          noteElement.dataset.startMsec = note.start_msec;
+          // ノートが画面最上部( y=0 )に現れるのは (start_msec - approachTime)
+          // つまり approachTime ms 前から落ち始めるイメージ
+          lane.appendChild(noteElement);
+        });
       }
 
       function gameLoop() {
@@ -231,51 +265,28 @@
         requestAnimationFrame(gameLoop);
       }
 
-      // ノートが下 -100px (ヒットライン) に来る時刻 => note.start_msec
-      // => その 2秒前 (approachTime=2000) に y= -ノート高さ付近
-      // => speed = (window.innerHeight - 100) / approachTime
-      function getSpeed() {
-        // ノートが y=0 から y=(window.innerHeight-100) まで approachTime ms かける
-        const distance = window.innerHeight - 100;
-        return distance / approachTime; // px/ms
-      }
-
-      function spawnNotes(noteData) {
-        noteData.forEach((note) => {
-          const lane = document.querySelector(`.lane[data-key="${note.type}"]`);
-          if (!lane) return;
-
-          const noteElement = document.createElement("div");
-          noteElement.classList.add("note");
-
-          // ノート高さ: 単純に duration_msec * 0.1px とか。お好みで
-          const noteHeight = Math.max(20, (note.duration_msec || 0) * 0.1);
-          noteElement.style.height = noteHeight + "px";
-
-          noteElement.dataset.startMsec = note.start_msec;
-          noteElement.dataset.endMsec = note.end_msec;
-          lane.appendChild(noteElement);
-        });
-      }
-
       function updateNotes() {
         const elapsed = performance.now() - gameStartTime;
         const speed = getSpeed();
+        const approachTime = getApproachTime();
 
         document.querySelectorAll(".note").forEach((note) => {
           const startMsec = parseInt(note.dataset.startMsec, 10);
-          // このノートが「下 -100px に来る瞬間」が startMsec
-          // なので startMsec - approachTime に 画面上( y=0付近 ) に居るイメージ
-          // => y = speed * (elapsed - (startMsec - approachTime))
+
+          // t = (現在経過時間) - (ノートが下ラインに到達する時刻 - アプローチ時間)
+          //   = elapsed - (startMsec - approachTime)
+          // t < 0 => まだ画面外上にいる
+          // t >= 0 => 画面内を落ちてくる
           const t = elapsed - (startMsec - approachTime);
 
           if (t < 0) {
-            // まだ上の方(画面外)にいる
-            note.style.transform = `translateY(-120px)`;
+            // まだ上の方 (画面外) にいる
+            note.style.transform = `translateY(-15000px)`;
           } else {
-            // 画面内に落ちてくる
+            // y = speed * t
+            // t=0 のとき y=0 => 画面上端
+            // t=approachTime のとき => y= speed*approachTime = (window.innerHeight-100)
             const y = t * speed;
-            // y が (window.innerHeight - 100) を超える => 下に抜けた
             if (y > window.innerHeight) {
               note.remove();
             } else {
@@ -285,7 +296,7 @@
         });
       }
 
-      // 判定
+      // 打鍵(クリック)で判定
       document.querySelectorAll(".hit-button").forEach((button) => {
         button.addEventListener("click", () => {
           if (!gameStartTime) return;
@@ -295,11 +306,12 @@
           const notesInLane = lane.querySelectorAll(".note");
           if (notesInLane.length === 0) return;
 
+          // 一番上にあるノートを対象
           const closestNote = notesInLane[0];
           const startMsec = parseInt(closestNote.dataset.startMsec, 10);
 
           const elapsed = performance.now() - gameStartTime;
-          // diff=ノート理想タイミング(startMsec) と 現在時刻 のズレ
+          // 打鍵とノート到達タイミングのズレ
           const diff = Math.abs(elapsed - startMsec);
 
           let feedbackText = "Bad";
@@ -312,11 +324,13 @@
           } else if (diff <= 300) {
             score += 2;
             feedbackText = "Good";
+          } else if (diff > 500) {
+            return;
           }
 
           showFeedback(lane, feedbackText);
           closestNote.remove();
-          console.log(`Hit! Score: ${score}, diff=${diff}`);
+          console.log(`Hit! Score=${score}, diff=${diff}`);
         });
       });
 
@@ -325,13 +339,10 @@
         feedback.textContent = text;
         feedback.classList.add("feedback");
         lane.appendChild(feedback);
-
-        setTimeout(() => {
-          feedback.remove();
-        }, 1000);
+        setTimeout(() => feedback.remove(), 1000);
       }
 
-      // スタートメニューボタンからゲーム開始
+      // Startボタン => ゲーム開始
       startMenuButton.addEventListener("click", startGame);
     </script>
   </body>
