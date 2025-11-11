@@ -5,345 +5,1155 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Rhythm Game</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        height: 100%;
+      }
       body {
         margin: 0;
         overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        background-color: #fff;
-        font-family: Arial, sans-serif;
+        background-color: #000;
+        font-family: "Roboto", sans-serif;
+        color: #eee;
+        height: 100%;
       }
+
+      /* イコライザー背景 */
+      #visualizer-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.6;
+      }
+      #visualizer {
+        width: 100%;
+        height: 100%;
+      }
+
+      /* パーティクルエフェクト */
+      #particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: none;
+      }
+
       #menu {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        padding: 30px;
+        border-radius: 15px;
         text-align: center;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        z-index: 100;
+        backdrop-filter: blur(10px);
+        overflow: auto;
       }
-      #menu select,
-      #menu button {
-        margin: 10px;
-        padding: 10px;
+      #menu h1 {
+        font-size: 56px;
+        margin-bottom: 30px;
+        background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 3s ease infinite;
+      }
+      @keyframes gradientShift {
+        0%,
+        100% {
+          filter: hue-rotate(0deg);
+        }
+        50% {
+          filter: hue-rotate(45deg);
+        }
+      }
+      #track-selection {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        overflow-y: auto;
+        padding-right: 10px;
+      }
+      #track-selection::-webkit-scrollbar {
+        width: 8px;
+      }
+      #track-selection::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }
+      #track-selection::-webkit-scrollbar-thumb {
+        background: rgba(0, 255, 255, 0.5);
+        border-radius: 4px;
+      }
+      .track-card {
+        display: flex;
+        align-items: center;
+        background: linear-gradient(
+          135deg,
+          rgba(30, 30, 50, 0.9),
+          rgba(20, 20, 40, 0.9)
+        );
+        border-radius: 10px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid rgba(0, 255, 255, 0.2);
+      }
+      .track-card:hover {
+        transform: scale(1.03);
+        box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        border-color: rgba(0, 255, 255, 0.6);
+      }
+      .track-card img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-right: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      }
+      .track-info h2 {
+        margin: 0;
+        font-size: 20px;
+        color: #00ffff;
+      }
+      .track-info p {
+        margin: 5px 0 0;
         font-size: 16px;
+        color: #aaa;
       }
       #game-container {
         position: relative;
         width: 100vw;
-        height: 100vh;
-        border: 1px solid #333;
+        height: 100%;
+        display: none;
+        flex-direction: column;
+        z-index: 10;
+      }
+      #game-header {
+        height: 80px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 30px;
+        background: rgba(0, 0, 0, 0.8);
+        box-shadow: 0 2px 10px rgba(0, 255, 255, 0.3);
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+      }
+      #score-board {
+        font-size: 20px;
+        text-shadow: 0 0 10px #00ffff;
+        font-weight: bold;
+      }
+      #back-to-top {
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #008cba, #00ffff);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(0, 140, 186, 0.4);
+      }
+      #back-to-top:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
+      }
+      #lanes-container {
+        flex: 1;
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        background-color: #fff;
-        visibility: hidden; /* 初期状態では非表示 */
+        grid-template-columns: repeat(4, 1fr);
+        position: relative;
+        gap: 3px;
       }
       .lane {
-        border-left: 2px solid #ccc;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0),
+          rgba(0, 50, 100, 0.1)
+        );
+        border-left: 2px solid rgba(0, 255, 255, 0.3);
         position: relative;
+        box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
       }
       .lane:last-child {
-        border-right: 2px solid #ccc;
+        border-right: 2px solid rgba(0, 255, 255, 0.3);
       }
-      .note {
+
+      /* レーンに流れるラインエフェクト */
+      .lane::before {
+        content: "";
         position: absolute;
-        width: 100%;
-        background-color: #000;
-        z-index: 1;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00ffff, transparent);
+        animation: scanline 2s linear infinite;
+        opacity: 0.5;
       }
+      @keyframes scanline {
+        0% {
+          top: 0%;
+        }
+        100% {
+          top: 100%;
+        }
+      }
+
       .hit-button {
         position: absolute;
         bottom: 0;
         width: 100%;
-        height: 100px;
-        background-color: #d8f2ff;
-        opacity: 0.5;
-        border: 2px solid #aaa;
-        text-align: center;
-        line-height: 60px;
-        font-size: 18px;
+        height: 150px;
+        background: linear-gradient(
+          to top,
+          rgba(0, 200, 255, 0.3),
+          rgba(0, 200, 255, 0.1)
+        );
+        border-top: 3px solid rgba(0, 255, 255, 0.8);
         cursor: pointer;
         z-index: 2;
+        transition: all 0.1s;
+        box-shadow: 0 -5px 20px rgba(0, 255, 255, 0.3);
       }
-      #back-to-top {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 10px 15px;
-        background-color: #008cba;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 14px;
-        cursor: pointer;
-        z-index: 1000;
-        display: none;
+      .hit-button:hover {
+        background: linear-gradient(
+          to top,
+          rgba(0, 255, 200, 0.4),
+          rgba(0, 255, 200, 0.2)
+        );
+        box-shadow: 0 -5px 30px rgba(0, 255, 200, 0.5);
       }
+      .hit-button.active {
+        background: linear-gradient(
+          to top,
+          rgba(0, 255, 200, 0.7),
+          rgba(0, 255, 200, 0.3)
+        );
+        box-shadow: 0 -10px 40px rgba(0, 255, 200, 0.8);
+        transform: scale(1.05);
+      }
+
+      /* キーラベル表示 */
+      .hit-button::after {
+        content: attr(data-key-label);
+        position: absolute;
+        bottom: 50%;
+        left: 50%;
+        transform: translate(-50%, 50%);
+        font-size: 32px;
+        font-weight: bold;
+        color: rgba(0, 255, 255, 0.6);
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+      }
+
+      .note {
+        position: absolute;
+        width: 90%;
+        left: 5%;
+        background: linear-gradient(180deg, #ff0080, #ff8c00);
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(255, 140, 0, 0.8);
+        z-index: 1;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        animation: noteGlow 0.5s ease-in-out infinite alternate;
+      }
+
+      /* ロングノート用のスタイル */
+      .note.long-note {
+        background: linear-gradient(180deg, #ff0080, #ff0080, #ff8c00);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+      }
+
+      .note.long-note::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 10px,
+          rgba(255, 255, 255, 0.1) 10px,
+          rgba(255, 255, 255, 0.1) 12px
+        );
+        border-radius: 6px;
+      }
+
+      @keyframes noteGlow {
+        0% {
+          box-shadow: 0 0 20px rgba(255, 140, 0, 0.8);
+        }
+        100% {
+          box-shadow: 0 0 30px rgba(255, 0, 128, 1);
+        }
+      }
+
       .feedback {
         position: absolute;
-        bottom: 80px;
+        bottom: 170px;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 20px;
+        font-size: 28px;
         font-weight: bold;
-        color: #db3030;
         opacity: 1;
         animation: feedbackAnimation 1s ease-out forwards;
-        pointer-events: none; /* クリックできないようにする */
+        pointer-events: none;
+        text-shadow: 0 0 10px currentColor;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.9),
+          0 0 20px rgba(255, 255, 255, 0.6);
       }
       @keyframes feedbackAnimation {
         0% {
-          transform: translate(-50%, 0);
+          transform: translate(-50%, 0) scale(1);
           opacity: 1;
         }
         100% {
-          transform: translate(-50%, -50px);
+          transform: translate(-50%, -60px) scale(1.3);
           opacity: 0;
+        }
+      }
+
+      /* コンボ数の大きな表示 */
+      #combo-display {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 80px;
+        font-weight: bold;
+        color: #00ffff;
+        text-shadow: 0 0 20px #00ffff;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 500;
+        transition: opacity 0.3s;
+      }
+      #combo-display.show {
+        opacity: 0.7;
+      }
+
+      #final-score {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.95);
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        color: #fff;
+        text-align: center;
+        backdrop-filter: blur(10px);
+      }
+      #final-score h1 {
+        font-size: 56px;
+        margin-bottom: 30px;
+        background: linear-gradient(45deg, #00ffff, #ff00ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      #final-score p {
+        font-size: 32px;
+        margin: 15px;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      }
+      #final-score button {
+        margin-top: 30px;
+        padding: 15px 30px;
+        font-size: 22px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #008cba, #00ffff);
+        color: #fff;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        transition: all 0.3s;
+      }
+      #final-score button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 255, 255, 0.6);
+      }
+      @media (max-width: 768px) {
+        /* シャドウとグロー控えめ */
+        .track-card {
+          box-shadow: none;
+        }
+        .hit-button {
+          box-shadow: none;
+        }
+        .note {
+          animation: none; /* noteGlow停止 */
+          box-shadow: 0 0 8px rgba(255, 140, 0, 0.5); /* 簡素化 */
         }
       }
     </style>
   </head>
   <body>
+    <!-- イコライザー背景 -->
+    <div id="visualizer-container">
+      <canvas id="visualizer"></canvas>
+    </div>
+
+    <!-- パーティクルエフェクト -->
+    <canvas id="particles"></canvas>
+
+    <!-- コンボ表示 -->
+    <div id="combo-display"></div>
+
     <div id="menu">
       <h1>Rhythm Game</h1>
-      <select id="track-select">
-        <option value="track1">Track 1</option>
-        <option value="track2">Track 2</option>
-        <option value="track3">Track 3</option>
-        <option value="track4">Track 4</option>
-      </select>
-      <button id="start-menu-button">Start Game</button>
+      <div id="track-selection">
+        <div class="track-card" data-track="track1">
+          <img src="./data/1.jpeg" alt="Track 1 Thumbnail" />
+          <div class="track-info">
+            <h2>時空を超えた愛</h2>
+            <p>難易度: ☆☆★</p>
+          </div>
+        </div>
+        <div class="track-card" data-track="track2">
+          <img src="./data/2.jpeg" alt="Track 2 Thumbnail" />
+          <div class="track-info">
+            <h2>時空を超えた愛</h2>
+            <p>難易度: ☆★★</p>
+          </div>
+        </div>
+        <div class="track-card" data-track="track3">
+          <img src="./data/3.jpeg" alt="Track 3 Thumbnail" />
+          <div class="track-info">
+            <h2>戦うサラリーマン</h2>
+            <p>難易度: ☆★★</p>
+          </div>
+        </div>
+        <div class="track-card" data-track="track4">
+          <img src="./data/4.jpeg" alt="Track 4 Thumbnail" />
+          <div class="track-info">
+            <h2>戦うサラリーマン</h2>
+            <p>難易度: ★★★</p>
+          </div>
+        </div>
+        <div class="track-card" data-track="track5">
+          <img src="./data/5.jpeg" alt="Track 5 Thumbnail" />
+          <div class="track-info">
+            <h2>One Sock</h2>
+            <p>難易度: ☆★★</p>
+          </div>
+        </div>
+        <div class="track-card" data-track="track6">
+          <img src="./data/6.jpeg" alt="Track 6 Thumbnail" />
+          <div class="track-info">
+            <h2>夜に想う</h2>
+            <p>難易度: ☆★★</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="game-container">
-      <!-- レーンは key1 ~ key6 -->
-      <div class="lane" data-key="key1">
-        <div class="hit-button" data-key="key1"></div>
+      <div id="game-header">
+        <div id="score-board">Score: 0 | Combo: 0</div>
+        <button id="back-to-top">Back</button>
       </div>
-      <div class="lane" data-key="key2">
-        <div class="hit-button" data-key="key2"></div>
-      </div>
-      <div class="lane" data-key="key3">
-        <div class="hit-button" data-key="key3"></div>
-      </div>
-      <div class="lane" data-key="key4">
-        <div class="hit-button" data-key="key4"></div>
-      </div>
-      <div class="lane" data-key="key5">
-        <div class="hit-button" data-key="key5"></div>
-      </div>
-      <div class="lane" data-key="key6">
-        <div class="hit-button" data-key="key6"></div>
+      <div id="lanes-container">
+        <div class="lane" data-key="key1">
+          <div class="hit-button" data-key="key1" data-key-label="1"></div>
+        </div>
+        <div class="lane" data-key="key2">
+          <div class="hit-button" data-key="key2" data-key-label="2"></div>
+        </div>
+        <div class="lane" data-key="key3">
+          <div class="hit-button" data-key="key3" data-key-label="3"></div>
+        </div>
+        <div class="lane" data-key="key4">
+          <div class="hit-button" data-key="key4" data-key-label="4"></div>
+        </div>
       </div>
     </div>
 
-    <button id="back-to-top">Back</button>
+    <div id="final-score">
+      <h1>🎊 Game Over 🎊</h1>
+      <p id="final-score-text"></p>
+      <button id="restart-button">Restart</button>
+    </div>
+
     <audio id="audio"></audio>
 
     <script>
       const trackData = {
-        track1: { mp3: "./data/1.mp3", json: "./data/1.json" },
-        track2: { mp3: "./data/2.mp3", json: "./data/2.json" },
-        track3: { mp3: "./data/3.mp3", json: "./data/3.json" },
-        track4: { mp3: "./data/4.mp3", json: "./data/4.json" },
+        track1: {
+          mp3: "./data/1.mp3",
+          json: "./data/1.json",
+          title: "Track 1",
+        },
+        track2: {
+          mp3: "./data/2.mp3",
+          json: "./data/2.json",
+          title: "Track 2",
+        },
+        track3: {
+          mp3: "./data/3.mp3",
+          json: "./data/3.json",
+          title: "Track 3",
+        },
+        track4: {
+          mp3: "./data/4.mp3",
+          json: "./data/4.json",
+          title: "Track 4",
+        },
+        track5: {
+          mp3: "./data/5.mp3",
+          json: "./data/5.json",
+          title: "Track 5",
+        },
+        track6: {
+          mp3: "./data/6.mp3",
+          json: "./data/6.json",
+          title: "Track 6",
+        },
       };
 
       const menu = document.getElementById("menu");
-      const trackSelect = document.getElementById("track-select");
-      const startMenuButton = document.getElementById("start-menu-button");
       const gameContainer = document.getElementById("game-container");
       const backToTopButton = document.getElementById("back-to-top");
       const audio = document.getElementById("audio");
+      const scoreBoard = document.getElementById("score-board");
+      const finalScoreOverlay = document.getElementById("final-score");
+      const finalScoreText = document.getElementById("final-score-text");
+      const restartButton = document.getElementById("restart-button");
+      const comboDisplay = document.getElementById("combo-display");
 
-      let selectedTrack = trackData["track1"];
+      let selectedTrack = null;
       let notes = [];
       let tempo = 120.0;
-      let gameStartTime = null;
+      let audioStartTime = 0;
       let score = 0;
+      let combo = 0;
+      let highestCombo = 0;
+      let animationId = null;
+      let audioContext = null;
+      let analyser = null;
+      let dataArray = null;
+      let activeKeys = new Set(); // 押されているキーを追跡
+      let longNoteStates = new Map(); // ロングノートの状態管理
 
-      // カウントダウン後に再生開始 => 3秒後
-      const countdownMs = 3000;
+      const countdownMs = 2000;
+      const audioPreloadBuffer = 100;
+      const keyMap = { 1: "key1", 2: "key2", 3: "key3", 4: "key4" };
 
-      // ノートが下-100px に到達するちょうどの時刻 = note.start_msec
-      // => そこに至る "アプローチ時間" を設ける (例: 1小節分)
-      // => 例: 4拍子(4拍) => measureMs = (60000/tempo)*4
+      // イコライザービジュアライザーの初期化
+      const visualizerCanvas = document.getElementById("visualizer");
+      const visualizerCtx = visualizerCanvas.getContext("2d");
+      visualizerCanvas.width = window.innerWidth;
+      visualizerCanvas.height = window.innerHeight;
+
+      // パーティクルシステム
+      const particlesCanvas = document.getElementById("particles");
+      const particlesCtx = particlesCanvas.getContext("2d");
+      particlesCanvas.width = window.innerWidth;
+      particlesCanvas.height = window.innerHeight;
+
+      const particles = [];
+
+      class Particle {
+        constructor(x, y, color) {
+          this.x = x;
+          this.y = y;
+          this.vx = (Math.random() - 0.5) * 4;
+          this.vy = Math.random() * -5 - 2;
+          this.life = 1;
+          this.color = color;
+          this.size = Math.random() * 4 + 2;
+        }
+
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          this.vy += 0.1;
+          this.life -= 0.02;
+        }
+
+        draw(ctx) {
+          ctx.save();
+          ctx.globalAlpha = this.life;
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function initAudioContext() {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 128;
+          analyser.smoothingTimeConstant = 0.8;
+          const source = audioContext.createMediaElementSource(audio);
+          source.connect(analyser);
+          analyser.connect(audioContext.destination);
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+        }
+      }
+
+      function drawVisualizer() {
+        if (!analyser || !dataArray) return;
+
+        analyser.getByteFrequencyData(dataArray);
+
+        visualizerCtx.fillStyle = "rgba(0, 0, 0, 0.3)";
+        visualizerCtx.fillRect(
+          0,
+          0,
+          visualizerCanvas.width,
+          visualizerCanvas.height
+        );
+
+        const barWidth = (visualizerCanvas.width / dataArray.length) * 2;
+        let x = 0;
+
+        for (let i = 0; i < dataArray.length; i++) {
+          const barHeight =
+            (dataArray[i] / 255) * visualizerCanvas.height * 0.8;
+
+          const hue = (i / dataArray.length) * 360;
+          visualizerCtx.fillStyle = `hsla(${hue}, 100%, 50%, 0.8)`;
+
+          visualizerCtx.fillRect(
+            x,
+            visualizerCanvas.height - barHeight,
+            barWidth,
+            barHeight
+          );
+
+          x += barWidth + 1;
+        }
+
+        requestAnimationFrame(drawVisualizer);
+      }
+
+      function updateParticles() {
+        particlesCtx.clearRect(
+          0,
+          0,
+          particlesCanvas.width,
+          particlesCanvas.height
+        );
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          particles[i].update();
+          particles[i].draw(particlesCtx);
+
+          if (particles[i].life <= 0) {
+            particles.splice(i, 1);
+          }
+        }
+
+        requestAnimationFrame(updateParticles);
+      }
+
+      function createHitParticles(x, y, color) {
+        for (let i = 0; i < 20; i++) {
+          particles.push(new Particle(x, y, color));
+        }
+      }
+
       function getApproachTime() {
         const beatsPerMeasure = 4;
         const measureMs = (60000 / tempo) * beatsPerMeasure;
-        return measureMs; // 1小節分落とす
+        return measureMs * 1.5;
       }
 
       function getSpeed() {
-        // 移動距離 = 画面上( y=0 ) -> 画面下 -100px
-        const distance = window.innerHeight - 100;
+        const distance = window.innerHeight - 150;
         const approachMs = getApproachTime();
-        return distance / approachMs; // px/ms
+        return distance / approachMs;
       }
 
-      startMenuButton.addEventListener("click", () => {
-        const selectedTrackKey = trackSelect.value;
-        selectedTrack = trackData[selectedTrackKey];
-
-        menu.style.display = "none";
-        gameContainer.style.visibility = "visible";
-        backToTopButton.style.display = "block";
-
-        audio.src = selectedTrack.mp3;
+      document.querySelectorAll(".track-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          const trackKey = card.dataset.track;
+          selectedTrack = trackData[trackKey];
+          menu.style.display = "none";
+          gameContainer.style.display = "flex";
+          audio.src = selectedTrack.mp3;
+          initAudioContext();
+          startGame();
+        });
       });
 
-      backToTopButton.addEventListener("click", () => {
+      backToTopButton.addEventListener("click", resetGame);
+      restartButton.addEventListener("click", resetGame);
+
+      function resetGame() {
+        if (animationId) cancelAnimationFrame(animationId);
         menu.style.display = "block";
-        gameContainer.style.visibility = "hidden";
-        backToTopButton.style.display = "none";
+        gameContainer.style.display = "none";
+        finalScoreOverlay.style.display = "none";
         notes = [];
         score = 0;
-        gameStartTime = null;
+        combo = 0;
+        highestCombo = 0;
+        audioStartTime = 0;
+        particles.length = 0;
+        activeKeys.clear();
+        longNoteStates.clear();
         document.querySelectorAll(".note").forEach((note) => note.remove());
         audio.pause();
         audio.currentTime = 0;
-      });
+        updateScoreBoard();
+
+        // タイマーのクリーンアップ
+        if (window.__spawnTimers) {
+          window.__spawnTimers.forEach((id) => clearTimeout(id));
+          window.__spawnTimers.length = 0;
+        }
+        window.__spawnScheduled = false;
+      }
 
       async function startGame() {
         score = 0;
+        combo = 0;
+        highestCombo = 0;
+        activeKeys.clear();
+        longNoteStates.clear();
+        updateScoreBoard();
 
-        // JSONデータ読み込み
         const response = await fetch(selectedTrack.json);
         const jsonData = await response.json();
 
         tempo = jsonData.metadata.tempo || 120.0;
-        notes = jsonData.notes;
-
-        // 3秒後にオーディオ再生 => ノート時刻を +3000 シフト
-        notes.forEach((note) => {
-          note.start_msec += countdownMs;
-          note.end_msec += countdownMs;
-        });
+        notes = jsonData.notes.map((note) => ({
+          ...note,
+          type: mapToFourLanes(note.type),
+        }));
 
         spawnNotes(notes);
 
-        gameStartTime = performance.now();
+        audio.load();
+        await new Promise((resolve) => {
+          audio.addEventListener("canplaythrough", resolve, { once: true });
+        });
 
-        setTimeout(() => {
-          audio.play().catch((e) => console.log(e));
-        }, countdownMs - 500);
+        await new Promise((resolve) =>
+          setTimeout(resolve, countdownMs - audioPreloadBuffer)
+        );
+
+        const playPromise = audio.play();
+        if (playPromise) {
+          await playPromise.catch((e) => console.log("Audio play error:", e));
+        }
+
+        audioStartTime = performance.now();
 
         requestAnimationFrame(gameLoop);
+        drawVisualizer();
+        updateParticles();
+      }
+
+      function mapToFourLanes(keyType) {
+        const mapping = {
+          key1: "key1",
+          key2: "key2",
+          key3: "key3",
+          key4: "key4",
+          key5: "key3",
+          key6: "key4",
+        };
+        return mapping[keyType] || keyType;
       }
 
       function spawnNotes(noteData) {
-        const speed = getSpeed();
-        const approachTime = getApproachTime();
+        if (!window.__spawnTimers) window.__spawnTimers = [];
+        window.__spawnTimers.forEach((id) => clearTimeout(id));
+        window.__spawnTimers.length = 0;
 
-        noteData.forEach((note) => {
+        function createNoteElement(note) {
+          const speed = getSpeed();
           const lane = document.querySelector(`.lane[data-key="${note.type}"]`);
           if (!lane) return;
-          if (!note.duration_msec) return;
 
           const noteElement = document.createElement("div");
           noteElement.classList.add("note");
 
-          // duration_msec 分ノートを縦に伸ばす (お好みで調整)
-          // ここでは "ノート長 = duration_msec * speed / 2" とか
-          const noteHeight = Math.max(
-            20,
-            ((note.duration_msec || 0) * speed) / 2
-          );
+          const noteDuration = note.duration_msec || 200;
+          const isLongNote = noteDuration > 500; // 500ms以上をロングノートとする
+
+          if (isLongNote) {
+            noteElement.classList.add("long-note");
+          }
+
+          const noteHeight = Math.max(20, (noteDuration * speed) / 2);
           noteElement.style.height = noteHeight + "px";
 
-          // dataset に保存
-          // note.start_msec => ノートが (window.innerHeight - 100) に到達する時刻
           noteElement.dataset.startMsec = note.start_msec;
-          // ノートが画面最上部( y=0 )に現れるのは (start_msec - approachTime)
-          // つまり approachTime ms 前から落ち始めるイメージ
+          noteElement.dataset.endMsec = note.start_msec + noteDuration;
+          noteElement.dataset.duration = noteDuration;
+          noteElement.dataset.isLongNote = isLongNote;
+          noteElement.dataset.hit = "false";
+          noteElement.dataset.longNoteActive = "false";
           lane.appendChild(noteElement);
-        });
+        }
+
+        if (window.__spawnScheduled) {
+          window.removeEventListener(
+            "__spawn_schedule",
+            window.__spawnScheduleHandler
+          );
+        }
+        window.__spawnScheduled = false;
+
+        const onPlaying = () => {
+          if (window.__spawnScheduled) return;
+          window.__spawnScheduled = true;
+
+          const startPerfMs = performance.now() - audio.currentTime * 1000;
+          const approachTime = getApproachTime();
+          const LOOK_AHEAD = approachTime + 120;
+
+          for (const note of noteData) {
+            const nowAudioMs = performance.now() - startPerfMs;
+            const spawnAtAudioMs = note.start_msec - approachTime;
+            let delay = spawnAtAudioMs - nowAudioMs;
+            delay -= 120;
+
+            if (delay <= 0) {
+              if (!audio.paused) createNoteElement(note);
+              continue;
+            }
+
+            const id = setTimeout(() => {
+              if (!audio.paused) createNoteElement(note);
+            }, delay);
+
+            window.__spawnTimers.push(id);
+          }
+
+          audio.removeEventListener("playing", onPlaying);
+        };
+
+        audio.addEventListener("playing", onPlaying, { once: true });
+        if (!audio.paused) {
+          onPlaying();
+        }
+
+        const cleanup = () => {
+          window.__spawnTimers.forEach((id) => clearTimeout(id));
+          window.__spawnTimers.length = 0;
+          window.__spawnScheduled = false;
+          audio.removeEventListener("ended", cleanup);
+          audio.removeEventListener("pause", cleanup);
+        };
+        audio.addEventListener("ended", cleanup, { once: true });
+        audio.addEventListener("pause", cleanup, { once: true });
       }
 
-      function gameLoop() {
-        if (!gameStartTime) return;
+      function gameLoop(timestamp) {
         updateNotes();
-        requestAnimationFrame(gameLoop);
+        animationId = requestAnimationFrame(gameLoop);
       }
 
       function updateNotes() {
-        const elapsed = performance.now() - gameStartTime;
+        const currentAudioTime = audio.currentTime * 1000;
         const speed = getSpeed();
         const approachTime = getApproachTime();
 
         document.querySelectorAll(".note").forEach((note) => {
-          const startMsec = parseInt(note.dataset.startMsec, 10);
+          if (
+            note.dataset.hit === "true" &&
+            note.dataset.isLongNote === "false"
+          )
+            return;
 
-          // t = (現在経過時間) - (ノートが下ラインに到達する時刻 - アプローチ時間)
-          //   = elapsed - (startMsec - approachTime)
-          // t < 0 => まだ画面外上にいる
-          // t >= 0 => 画面内を落ちてくる
-          const t = elapsed - (startMsec - approachTime);
+          const startMsec = parseInt(note.dataset.startMsec, 10);
+          const endMsec = parseInt(note.dataset.endMsec, 10);
+          const isLongNote = note.dataset.isLongNote === "true";
+          const timeUntilHit = startMsec - currentAudioTime;
+          const t = approachTime - timeUntilHit;
 
           if (t < 0) {
-            // まだ上の方 (画面外) にいる
-            note.style.transform = `translateY(-15000px)`;
+            note.style.transform = `translateY(-100px)`;
+            note.style.opacity = "0";
           } else {
-            // y = speed * t
-            // t=0 のとき y=0 => 画面上端
-            // t=approachTime のとき => y= speed*approachTime = (window.innerHeight-100)
+            note.style.opacity = "1";
             const y = t * speed;
-            if (y > window.innerHeight) {
-              note.remove();
+
+            // ロングノートの処理
+            if (isLongNote && note.dataset.longNoteActive === "true") {
+              const timeSinceStart = currentAudioTime - startMsec;
+              const duration = endMsec - startMsec;
+
+              if (timeSinceStart >= duration) {
+                // ロングノート完了
+                if (note.dataset.hit === "false") {
+                  showFeedback(note.parentElement, "Perfect Long!", "#00ff00");
+                  const baseScore = 20;
+                  const bonus = Math.floor(combo / 10);
+                  score += baseScore * (1 + bonus);
+                  combo++;
+                  if (combo > highestCombo) highestCombo = combo;
+                  updateScoreBoard();
+                  updateComboDisplay();
+
+                  const laneRect = note.parentElement.getBoundingClientRect();
+                  const hitX = laneRect.left + laneRect.width / 2;
+                  const hitY = window.innerHeight - 150;
+                  createHitParticles(hitX, hitY, "#00ff00");
+                }
+                note.dataset.hit = "true";
+                note.style.opacity = "0";
+                longNoteStates.delete(note);
+              } else {
+                // ロングノート進行中 - 上部を消していく
+                const progress = timeSinceStart / duration;
+                const originalHeight =
+                  (parseFloat(note.dataset.duration) * speed) / 2;
+                const currentHeight = originalHeight * (1 - progress);
+                note.style.height = Math.max(20, currentHeight) + "px";
+                note.style.transform = `translateY(${
+                  y + originalHeight * progress
+                }px)`;
+              }
             } else {
-              note.style.transform = `translateY(${y}px)`;
+              if (y > window.innerHeight) {
+                if (note.dataset.hit === "false") {
+                  showFeedback(note.parentElement, "Miss", "#ff0000");
+                  combo = 0;
+                  note.dataset.hit = "true";
+                  note.style.opacity = "0";
+                  updateScoreBoard();
+                  updateComboDisplay();
+                  if (isLongNote) {
+                    longNoteStates.delete(note);
+                  }
+                }
+              } else {
+                note.style.transform = `translateY(${y}px)`;
+              }
+            }
+          }
+        });
+
+        if (
+          audio.ended &&
+          document.querySelectorAll('.note[data-hit="false"]').length === 0
+        ) {
+          setTimeout(showFinalScore, 2000);
+        }
+      }
+
+      function updateScoreBoard() {
+        scoreBoard.textContent = `Score: ${score} | Combo: ${combo}`;
+      }
+
+      function updateComboDisplay() {
+        if (combo >= 10 && combo % 10 === 0) {
+          comboDisplay.textContent = `${combo} COMBO!`;
+          comboDisplay.classList.add("show");
+          setTimeout(() => {
+            comboDisplay.classList.remove("show");
+          }, 800);
+        }
+      }
+
+      function handleHit(laneKey) {
+        const lane = document.querySelector(`.lane[data-key="${laneKey}"]`);
+        const notesInLane = Array.from(
+          lane.querySelectorAll('.note[data-hit="false"]')
+        );
+        if (notesInLane.length === 0) return;
+
+        let closestNote = null;
+        let minDistance = Infinity;
+        const currentAudioTime = audio.currentTime * 1000;
+
+        notesInLane.forEach((note) => {
+          const startMsec = parseInt(note.dataset.startMsec, 10);
+          const diff = Math.abs(currentAudioTime - startMsec);
+          if (diff < minDistance) {
+            minDistance = diff;
+            closestNote = note;
+          }
+        });
+
+        if (!closestNote) return;
+
+        const isLongNote = closestNote.dataset.isLongNote === "true";
+        const diff = minDistance;
+        let feedbackText = "";
+        let baseScore = 0;
+        let feedbackColor = "#ffffff";
+
+        if (diff <= 50) {
+          baseScore = 10;
+          feedbackText = "Perfect!";
+          feedbackColor = "#00ff00";
+        } else if (diff <= 100) {
+          baseScore = 7;
+          feedbackText = "Great!";
+          feedbackColor = "#00aaff";
+        } else if (diff <= 150) {
+          baseScore = 4;
+          feedbackText = "Good";
+          feedbackColor = "#ffff00";
+        } else if (diff <= 250) {
+          baseScore = 2;
+          feedbackText = "OK";
+          feedbackColor = "#ff8800";
+        } else {
+          return;
+        }
+
+        if (isLongNote) {
+          // ロングノート開始
+          closestNote.dataset.longNoteActive = "true";
+          longNoteStates.set(closestNote, {
+            laneKey: laneKey,
+            startTime: currentAudioTime,
+          });
+          showFeedback(lane, feedbackText, feedbackColor);
+        } else {
+          // 通常ノート
+          combo++;
+          if (combo > highestCombo) highestCombo = combo;
+          const bonus = Math.floor(combo / 10);
+          const gainedScore = baseScore * (1 + bonus);
+          score += gainedScore;
+          updateScoreBoard();
+          updateComboDisplay();
+
+          const laneRect = lane.getBoundingClientRect();
+          const hitX = laneRect.left + laneRect.width / 2;
+          const hitY = window.innerHeight - 150;
+          createHitParticles(hitX, hitY, feedbackColor);
+
+          showFeedback(lane, feedbackText, feedbackColor);
+          closestNote.dataset.hit = "true";
+          closestNote.style.opacity = "0";
+        }
+      }
+
+      function handleLongNoteRelease(laneKey) {
+        // ロングノートのリリース処理
+        const lane = document.querySelector(`.lane[data-key="${laneKey}"]`);
+        const activeLongNotes = Array.from(
+          lane.querySelectorAll('.note.long-note[data-long-note-active="true"]')
+        );
+
+        activeLongNotes.forEach((note) => {
+          if (longNoteStates.has(note)) {
+            const currentAudioTime = audio.currentTime * 1000;
+            const endMsec = parseInt(note.dataset.endMsec, 10);
+            const startMsec = parseInt(note.dataset.startMsec, 10);
+            const releaseDiff = Math.abs(currentAudioTime - endMsec);
+
+            // 早すぎるリリース
+            if (currentAudioTime < endMsec - 200) {
+              showFeedback(lane, "Too Early!", "#ff0000");
+              combo = 0;
+              note.dataset.hit = "true";
+              note.style.opacity = "0";
+              longNoteStates.delete(note);
+              updateScoreBoard();
             }
           }
         });
       }
 
-      // 打鍵(クリック)で判定
       document.querySelectorAll(".hit-button").forEach((button) => {
         button.addEventListener("click", () => {
-          if (!gameStartTime) return;
-
           const laneKey = button.dataset.key;
-          const lane = document.querySelector(`.lane[data-key="${laneKey}"]`);
-          const notesInLane = lane.querySelectorAll(".note");
-          if (notesInLane.length === 0) return;
-
-          // 一番上にあるノートを対象
-          const closestNote = notesInLane[0];
-          const startMsec = parseInt(closestNote.dataset.startMsec, 10);
-
-          const elapsed = performance.now() - gameStartTime;
-          // 打鍵とノート到達タイミングのズレ
-          const diff = Math.abs(elapsed - startMsec);
-
-          let feedbackText = "Bad";
-          if (diff <= 50) {
-            score += 10;
-            feedbackText = "Excellent";
-          } else if (diff <= 100) {
-            score += 5;
-            feedbackText = "Great";
-          } else if (diff <= 300) {
-            score += 2;
-            feedbackText = "Good";
-          } else if (diff > 500) {
-            return;
-          }
-
-          showFeedback(lane, feedbackText);
-          closestNote.remove();
-          console.log(`Hit! Score=${score}, diff=${diff}`);
+          button.classList.add("active");
+          setTimeout(() => button.classList.remove("active"), 100);
+          handleHit(laneKey);
         });
       });
 
-      function showFeedback(lane, text) {
+      document.addEventListener("keydown", (e) => {
+        if (!audio.src || gameContainer.style.display === "none") return;
+        const laneKey = keyMap[e.key];
+        if (laneKey && !activeKeys.has(e.key)) {
+          e.preventDefault();
+          activeKeys.add(e.key);
+          const button = document.querySelector(
+            `.hit-button[data-key="${laneKey}"]`
+          );
+          if (button) {
+            button.classList.add("active");
+            handleHit(laneKey);
+          }
+        }
+      });
+
+      document.addEventListener("keyup", (e) => {
+        const laneKey = keyMap[e.key];
+        if (laneKey) {
+          activeKeys.delete(e.key);
+          const button = document.querySelector(
+            `.hit-button[data-key="${laneKey}"]`
+          );
+          if (button) {
+            button.classList.remove("active");
+          }
+          handleLongNoteRelease(laneKey);
+        }
+      });
+
+      function showFeedback(lane, text, color) {
         const feedback = document.createElement("div");
         feedback.textContent = text;
         feedback.classList.add("feedback");
+        feedback.style.color = color;
         lane.appendChild(feedback);
         setTimeout(() => feedback.remove(), 1000);
       }
 
-      // Startボタン => ゲーム開始
-      startMenuButton.addEventListener("click", startGame);
+      function showFinalScore() {
+        if (animationId) cancelAnimationFrame(animationId);
+        finalScoreOverlay.style.display = "flex";
+
+        let rank = "C";
+        const accuracy =
+          highestCombo > 0 ? (score / (highestCombo * 10)) * 100 : 0;
+
+        if (accuracy >= 95) rank = "S";
+        else if (accuracy >= 90) rank = "A";
+        else if (accuracy >= 80) rank = "B";
+
+        finalScoreText.innerHTML = `
+          <div style="font-size: 48px; margin: 20px;">Rank: ${rank}</div>
+          Final Score: ${score}<br>
+          Highest Combo: ${highestCombo}<br>
+          Accuracy: ${accuracy.toFixed(1)}%
+        `;
+      }
+
+      window.addEventListener("resize", () => {
+        visualizerCanvas.width = window.innerWidth;
+        visualizerCanvas.height = window.innerHeight;
+        particlesCanvas.width = window.innerWidth;
+        particlesCanvas.height = window.innerHeight;
+      });
     </script>
   </body>
 </html>
