@@ -1,0 +1,267 @@
+{
+  "metadata": {
+    "title": "戦うサラリーマンの唄",
+    "tempo": 86.13,
+    "difficulty": 1,
+    "difficulty_metrics": {
+      "notes_count": 42,
+      "notes_per_second": 0.21,
+      "simultaneous_notes": 0,
+      "difficulty_rating": 2
+    }
+  },
+  "notes": [
+    {
+      "type": "key4",
+      "start_msec": 2597,
+      "end_msec": 2945,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 27071,
+      "end_msec": 27419,
+      "duration_msec": 348
+    },
+    {
+      "type": "key1",
+      "start_msec": 27768,
+      "end_msec": 28116,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 29161,
+      "end_msec": 29509,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 30577,
+      "end_msec": 30925,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 30925,
+      "end_msec": 31274,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 31970,
+      "end_msec": 32319,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 32667,
+      "end_msec": 33015,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 33387,
+      "end_msec": 33735,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 34083,
+      "end_msec": 34432,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 35836,
+      "end_msec": 36185,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 37590,
+      "end_msec": 37938,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 38286,
+      "end_msec": 38634,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 38983,
+      "end_msec": 39331,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 39679,
+      "end_msec": 40028,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 41073,
+      "end_msec": 41421,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 41432,
+      "end_msec": 41781,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 42489,
+      "end_msec": 42837,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 44579,
+      "end_msec": 44927,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 46692,
+      "end_msec": 47040,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 47388,
+      "end_msec": 47737,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 58000,
+      "end_msec": 58348,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 58743,
+      "end_msec": 59091,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 93248,
+      "end_msec": 93596,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 95314,
+      "end_msec": 95663,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 96708,
+      "end_msec": 97056,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 97741,
+      "end_msec": 98089,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 98078,
+      "end_msec": 98426,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 100167,
+      "end_msec": 100516,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 100841,
+      "end_msec": 101189,
+      "duration_msec": 348
+    },
+    {
+      "type": "key2",
+      "start_msec": 102930,
+      "end_msec": 103279,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 103964,
+      "end_msec": 104312,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 104997,
+      "end_msec": 105345,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 106390,
+      "end_msec": 106739,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 108457,
+      "end_msec": 108805,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 109130,
+      "end_msec": 109479,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 109850,
+      "end_msec": 110198,
+      "duration_msec": 348
+    },
+    {
+      "type": "key4",
+      "start_msec": 110547,
+      "end_msec": 110895,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 111917,
+      "end_msec": 112265,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 112590,
+      "end_msec": 112938,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 113287,
+      "end_msec": 113635,
+      "duration_msec": 348
+    },
+    {
+      "type": "key3",
+      "start_msec": 155291,
+      "end_msec": 155640,
+      "duration_msec": 348
+    }
+  ]
+}

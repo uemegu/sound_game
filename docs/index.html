@@ -1,283 +1,284 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Rhythm Game</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>Cyber Rhythm</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      * {
-        box-sizing: border-box;
-      }
-      html {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        overflow: hidden;
-        background-color: #000;
-        font-family: "Roboto", sans-serif;
-        color: #eee;
-        height: 100%;
+      :root {
+        --neon-blue: #00f3ff;
+        --neon-pink: #ff00ff;
+        --neon-purple: #bc13fe;
+        --bg-dark: #050510;
+        --lane-width-max: 600px;
       }
 
-      /* イコライザー背景 */
-      #visualizer-container {
+      * {
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background-color: var(--bg-dark);
+        font-family: "Rajdhani", sans-serif;
+        color: #fff;
+      }
+
+      /* --- 背景レイヤー --- */
+      #background-layer {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
         z-index: 0;
-        opacity: 0.6;
+        pointer-events: none;
+        background: radial-gradient(circle at 50% 30%, #1a1a2e 0%, #000000 90%);
       }
-      #visualizer {
+      #visualizer,
+      #particles {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
       }
+      #visualizer {
+        opacity: 0.6;
+        mix-blend-mode: screen;
+      }
 
-      /* パーティクルエフェクト */
-      #particles {
+      /* --- メニュー画面 --- */
+      #menu {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 1;
-        pointer-events: none;
-      }
-
-      #menu {
-        width: 100%;
-        height: 100%;
-        padding: 30px;
-        border-radius: 15px;
-        text-align: center;
-        box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
-        z-index: 100;
-        backdrop-filter: blur(10px);
-        overflow: auto;
-      }
-      #menu h1 {
-        font-size: 56px;
-        margin-bottom: 30px;
-        background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: gradientShift 3s ease infinite;
-      }
-      @keyframes gradientShift {
-        0%,
-        100% {
-          filter: hue-rotate(0deg);
-        }
-        50% {
-          filter: hue-rotate(45deg);
-        }
-      }
-      #track-selection {
+        z-index: 2000;
+        background: rgba(0, 0, 0, 0.85);
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        align-items: center;
+        padding: 40px 20px;
         overflow-y: auto;
-        padding-right: 10px;
+        backdrop-filter: blur(10px);
       }
-      #track-selection::-webkit-scrollbar {
-        width: 8px;
+
+      #menu h1 {
+        font-family: "Orbitron", sans-serif;
+        font-size: 48px;
+        margin-bottom: 30px;
+        background: linear-gradient(
+          90deg,
+          var(--neon-blue),
+          #fff,
+          var(--neon-pink)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 20px var(--neon-purple);
       }
-      #track-selection::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
+
+      #track-selection {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        width: 100%;
+        max-width: 800px;
       }
-      #track-selection::-webkit-scrollbar-thumb {
-        background: rgba(0, 255, 255, 0.5);
-        border-radius: 4px;
-      }
+
       .track-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 243, 255, 0.3);
+        border-radius: 12px;
+        padding: 15px;
         display: flex;
         align-items: center;
-        background: linear-gradient(
-          135deg,
-          rgba(30, 30, 50, 0.9),
-          rgba(20, 20, 40, 0.9)
-        );
-        border-radius: 10px;
-        padding: 12px;
         cursor: pointer;
-        transition: all 0.3s;
-        border: 2px solid rgba(0, 255, 255, 0.2);
+        transition: all 0.2s;
       }
-      .track-card:hover {
-        transform: scale(1.03);
-        box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
-        border-color: rgba(0, 255, 255, 0.6);
+      .track-card:active {
+        transform: scale(0.95);
+        background: rgba(0, 243, 255, 0.1);
       }
       .track-card img {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
+        width: 60px;
+        height: 60px;
         border-radius: 8px;
-        margin-right: 20px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        margin-right: 15px;
+        object-fit: cover;
       }
       .track-info h2 {
         margin: 0;
-        font-size: 20px;
-        color: #00ffff;
+        font-size: 18px;
+        color: #fff;
       }
       .track-info p {
         margin: 5px 0 0;
-        font-size: 16px;
-        color: #aaa;
-      }
-      #game-container {
-        position: relative;
-        width: 100vw;
-        height: 100%;
-        display: none;
-        flex-direction: column;
-        z-index: 10;
-      }
-      #game-header {
-        height: 80px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 30px;
-        background: rgba(0, 0, 0, 0.8);
-        box-shadow: 0 2px 10px rgba(0, 255, 255, 0.3);
-        z-index: 1000;
-        backdrop-filter: blur(5px);
-      }
-      #score-board {
-        font-size: 20px;
-        text-shadow: 0 0 10px #00ffff;
-        font-weight: bold;
-      }
-      #back-to-top {
-        padding: 12px 20px;
-        background: linear-gradient(135deg, #008cba, #00ffff);
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: all 0.3s;
-        box-shadow: 0 4px 15px rgba(0, 140, 186, 0.4);
-      }
-      #back-to-top:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
-      }
-      #lanes-container {
-        flex: 1;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        position: relative;
-        gap: 3px;
-      }
-      .lane {
-        background: linear-gradient(
-          to bottom,
-          rgba(0, 0, 0, 0),
-          rgba(0, 50, 100, 0.1)
-        );
-        border-left: 2px solid rgba(0, 255, 255, 0.3);
-        position: relative;
-        box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
-      }
-      .lane:last-child {
-        border-right: 2px solid rgba(0, 255, 255, 0.3);
+        font-size: 14px;
+        color: var(--neon-blue);
       }
 
-      /* レーンに流れるラインエフェクト */
-      .lane::before {
+      /* --- ゲーム画面 --- */
+      #game-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: none;
+        overflow: hidden;
+      }
+
+      /* 3Dシーン */
+      #scene-3d {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        perspective: 800px;
+        perspective-origin: 50% 40%;
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      #lanes-plane {
+        position: absolute;
+        left: 50%;
+        bottom: -20%;
+        width: 100%;
+        max-width: var(--lane-width-max);
+        height: 200%;
+        transform: translateX(-50%) rotateX(55deg);
+        transform-style: preserve-3d;
+        transform-origin: center bottom;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0) 0%,
+          rgba(0, 40, 80, 0.3) 50%,
+          rgba(0, 20, 40, 0.6) 100%
+        );
+        border-left: 2px solid rgba(255, 255, 255, 0.1);
+        border-right: 2px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* グリッド線 */
+      #lanes-plane::before {
         content: "";
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #00ffff, transparent);
-        animation: scanline 2s linear infinite;
-        opacity: 0.5;
-      }
-      @keyframes scanline {
-        0% {
-          top: 0%;
-        }
-        100% {
-          top: 100%;
-        }
-      }
-
-      .hit-button {
-        position: absolute;
         bottom: 0;
-        width: 100%;
-        height: 150px;
-        background: linear-gradient(
-          to top,
-          rgba(0, 200, 255, 0.3),
-          rgba(0, 200, 255, 0.1)
+        background-image: linear-gradient(
+          90deg,
+          transparent 0%,
+          transparent 24.5%,
+          rgba(255, 255, 255, 0.1) 25%,
+          transparent 25.5%,
+          transparent 49.5%,
+          rgba(255, 255, 255, 0.1) 50%,
+          transparent 50.5%,
+          transparent 74.5%,
+          rgba(255, 255, 255, 0.1) 75%,
+          transparent 75.5%
         );
-        border-top: 3px solid rgba(0, 255, 255, 0.8);
-        cursor: pointer;
-        z-index: 2;
-        transition: all 0.1s;
-        box-shadow: 0 -5px 20px rgba(0, 255, 255, 0.3);
-      }
-      .hit-button:hover {
-        background: linear-gradient(
-          to top,
-          rgba(0, 255, 200, 0.4),
-          rgba(0, 255, 200, 0.2)
-        );
-        box-shadow: 0 -5px 30px rgba(0, 255, 200, 0.5);
-      }
-      .hit-button.active {
-        background: linear-gradient(
-          to top,
-          rgba(0, 255, 200, 0.7),
-          rgba(0, 255, 200, 0.3)
-        );
-        box-shadow: 0 -10px 40px rgba(0, 255, 200, 0.8);
-        transform: scale(1.05);
+        z-index: 1;
       }
 
-      /* キーラベル表示 */
-      .hit-button::after {
-        content: attr(data-key-label);
+      /* タップ時のレーン発光 */
+      .lane-flash {
         position: absolute;
-        bottom: 50%;
+        top: 0;
+        bottom: 0;
+        width: 25%;
+        background: linear-gradient(
+          180deg,
+          transparent 0%,
+          rgba(0, 243, 255, 0.3) 80%,
+          rgba(0, 243, 255, 0.6) 100%
+        );
+        opacity: 0;
+        transition: opacity 0.05s;
+        z-index: 2;
+        mix-blend-mode: screen;
+      }
+      .lane-flash[data-lane="0"] {
+        left: 0%;
+      }
+      .lane-flash[data-lane="1"] {
+        left: 25%;
+      }
+      .lane-flash[data-lane="2"] {
         left: 50%;
-        transform: translate(-50%, 50%);
-        font-size: 32px;
-        font-weight: bold;
-        color: rgba(0, 255, 255, 0.6);
-        text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+      }
+      .lane-flash[data-lane="3"] {
+        left: 75%;
+      }
+      .lane-flash.active {
+        opacity: 1;
       }
 
+      /* 判定ライン */
+      #judgement-line {
+        position: absolute;
+        bottom: 15%;
+        left: 0;
+        width: 100%;
+        height: 8px;
+        background: #00f3ff;
+        box-shadow: 0 0 10px #00f3ff, 0 0 20px #fff;
+        z-index: 20;
+        transform: translateZ(2px);
+      }
+
+      /* ノート */
       .note {
         position: absolute;
-        width: 90%;
-        left: 5%;
-        background: linear-gradient(180deg, #ff0080, #ff8c00);
-        border-radius: 8px;
-        box-shadow: 0 0 20px rgba(255, 140, 0, 0.8);
-        z-index: 1;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        animation: noteGlow 0.5s ease-in-out infinite alternate;
+        width: 23%;
+        background: var(--neon-pink);
+        box-shadow: 0 0 15px var(--neon-pink),
+          inset 0 0 5px rgba(255, 255, 255, 0.8);
+        border-radius: 4px;
+        transform-origin: bottom center;
+        z-index: 10;
+      }
+      .note[data-lane="0"] {
+        left: 1%;
+        background: var(--neon-blue);
+        box-shadow: 0 0 15px var(--neon-blue);
+      }
+      .note[data-lane="1"] {
+        left: 26%;
+      }
+      .note[data-lane="2"] {
+        left: 51%;
+      }
+      .note[data-lane="3"] {
+        left: 76%;
+        background: var(--neon-blue);
+        box-shadow: 0 0 15px var(--neon-blue);
       }
 
-      /* ロングノート用のスタイル */
-      .note.long-note {
-        background: linear-gradient(180deg, #ff0080, #ff0080, #ff8c00);
-        border: 2px solid rgba(255, 255, 255, 0.5);
+      .note.long {
+        opacity: 0.9;
       }
-
-      .note.long-note::after {
+      .note.long::after {
         content: "";
         position: absolute;
         top: 0;
@@ -286,493 +287,417 @@
         bottom: 0;
         background: repeating-linear-gradient(
           0deg,
-          transparent,
-          transparent 10px,
-          rgba(255, 255, 255, 0.1) 10px,
-          rgba(255, 255, 255, 0.1) 12px
+          rgba(255, 255, 255, 0.4) 0,
+          transparent 20px
         );
-        border-radius: 6px;
       }
 
-      @keyframes noteGlow {
-        0% {
-          box-shadow: 0 0 20px rgba(255, 140, 0, 0.8);
-        }
-        100% {
-          box-shadow: 0 0 30px rgba(255, 0, 128, 1);
-        }
-      }
-
-      .feedback {
+      /* --- 2D HUD レイヤー --- */
+      #hud-layer {
         position: absolute;
-        bottom: 170px;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+        pointer-events: none;
+      }
+
+      #input-grid {
+        position: absolute;
+        bottom: 0;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 28px;
-        font-weight: bold;
-        opacity: 1;
-        animation: feedbackAnimation 1s ease-out forwards;
-        pointer-events: none;
-        text-shadow: 0 0 10px currentColor;
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.9),
-          0 0 20px rgba(255, 255, 255, 0.6);
+        width: 100%;
+        max-width: var(--lane-width-max);
+        height: 40%;
+        display: flex;
+        pointer-events: auto;
+        z-index: 110;
       }
-      @keyframes feedbackAnimation {
-        0% {
-          transform: translate(-50%, 0) scale(1);
-          opacity: 1;
-        }
-        100% {
-          transform: translate(-50%, -60px) scale(1.3);
-          opacity: 0;
-        }
+      .input-zone {
+        flex: 1;
+        position: relative;
       }
 
-      /* コンボ数の大きな表示 */
-      #combo-display {
-        position: fixed;
-        top: 50%;
+      .key-guide {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: "Orbitron";
+        font-size: 20px;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: bold;
+        pointer-events: none;
+      }
+
+      #score-header {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        pointer-events: auto;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.8) 0%,
+          transparent 100%
+        );
+      }
+      #score-display {
+        text-align: right;
+        font-family: "Orbitron";
+      }
+      #score-val {
+        font-size: 32px;
+        color: #fff;
+        text-shadow: 0 0 10px var(--neon-blue);
+      }
+
+      #abort-btn {
+        background: transparent;
+        border: 1px solid var(--neon-pink);
+        color: var(--neon-pink);
+        padding: 8px 24px;
+        font-family: "Orbitron";
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+      }
+      #abort-btn:hover {
+        background: var(--neon-pink);
+        color: #000;
+      }
+
+      #combo-container {
+        position: absolute;
+        top: 35%;
         left: 50%;
         transform: translate(-50%, -50%);
-        font-size: 80px;
-        font-weight: bold;
-        color: #00ffff;
-        text-shadow: 0 0 20px #00ffff;
+        text-align: center;
         opacity: 0;
+        transition: transform 0.05s;
         pointer-events: none;
-        z-index: 500;
-        transition: opacity 0.3s;
       }
-      #combo-display.show {
-        opacity: 0.7;
+      #combo-container.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+      }
+      #combo-num {
+        font-family: "Orbitron";
+        font-size: 90px;
+        color: #fff;
+        text-shadow: 0 0 20px var(--neon-blue);
+        line-height: 1;
+      }
+      #combo-text {
+        font-family: "Rajdhani";
+        font-size: 24px;
+        color: var(--neon-pink);
+        letter-spacing: 5px;
+        font-weight: bold;
       }
 
-      #final-score {
+      .feedback-text {
+        position: absolute;
+        bottom: 45%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: "Orbitron";
+        font-weight: 900;
+        font-size: 40px;
+        text-shadow: 0 0 10px currentColor;
+        animation: popUp 0.5s ease-out forwards;
+        z-index: 120;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      @keyframes popUp {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, 20px) scale(0.8);
+        }
+        20% {
+          opacity: 1;
+          transform: translate(-50%, 0) scale(1.2);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50px) scale(1);
+        }
+      }
+
+      #result-screen {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.95);
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
         display: none;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        z-index: 2000;
-        color: #fff;
-        text-align: center;
-        backdrop-filter: blur(10px);
+        z-index: 3000;
+        backdrop-filter: blur(15px);
       }
-      #final-score h1 {
-        font-size: 56px;
-        margin-bottom: 30px;
-        background: linear-gradient(45deg, #00ffff, #ff00ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-      #final-score p {
-        font-size: 32px;
-        margin: 15px;
-        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-      }
-      #final-score button {
+      #retry-btn {
         margin-top: 30px;
-        padding: 15px 30px;
-        font-size: 22px;
+        padding: 15px 60px;
+        background: linear-gradient(
+          45deg,
+          var(--neon-purple),
+          var(--neon-blue)
+        );
         border: none;
-        border-radius: 10px;
-        background: linear-gradient(135deg, #008cba, #00ffff);
+        border-radius: 30px;
         color: #fff;
+        font-family: "Orbitron";
+        font-size: 24px;
         cursor: pointer;
-        font-weight: bold;
-        box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
-        transition: all 0.3s;
+        box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
       }
-      #final-score button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 30px rgba(0, 255, 255, 0.6);
-      }
+
       @media (max-width: 768px) {
-        /* シャドウとグロー控えめ */
-        .track-card {
-          box-shadow: none;
+        #lanes-plane,
+        #input-grid {
+          width: 110%;
         }
-        .hit-button {
-          box-shadow: none;
-        }
-        .note {
-          animation: none; /* noteGlow停止 */
-          box-shadow: 0 0 8px rgba(255, 140, 0, 0.5); /* 簡素化 */
+        .key-guide {
+          display: none;
         }
       }
     </style>
   </head>
   <body>
-    <!-- イコライザー背景 -->
-    <div id="visualizer-container">
+    <audio id="main-audio"></audio>
+
+    <div id="background-layer">
       <canvas id="visualizer"></canvas>
+      <canvas id="particles"></canvas>
     </div>
 
-    <!-- パーティクルエフェクト -->
-    <canvas id="particles"></canvas>
-
-    <!-- コンボ表示 -->
-    <div id="combo-display"></div>
-
     <div id="menu">
-      <h1>Rhythm Game</h1>
-      <div id="track-selection">
-        <div class="track-card" data-track="track1">
-          <img src="./data/1.jpeg" alt="Track 1 Thumbnail" />
-          <div class="track-info">
-            <h2>時空を超えた愛</h2>
-            <p>難易度: ☆☆★</p>
-          </div>
-        </div>
-        <div class="track-card" data-track="track2">
-          <img src="./data/2.jpeg" alt="Track 2 Thumbnail" />
-          <div class="track-info">
-            <h2>時空を超えた愛</h2>
-            <p>難易度: ☆★★</p>
-          </div>
-        </div>
-        <div class="track-card" data-track="track3">
-          <img src="./data/3.jpeg" alt="Track 3 Thumbnail" />
-          <div class="track-info">
-            <h2>戦うサラリーマン</h2>
-            <p>難易度: ☆★★</p>
-          </div>
-        </div>
-        <div class="track-card" data-track="track4">
-          <img src="./data/4.jpeg" alt="Track 4 Thumbnail" />
-          <div class="track-info">
-            <h2>戦うサラリーマン</h2>
-            <p>難易度: ★★★</p>
-          </div>
-        </div>
-        <div class="track-card" data-track="track5">
-          <img src="./data/5.jpeg" alt="Track 5 Thumbnail" />
-          <div class="track-info">
-            <h2>One Sock</h2>
-            <p>難易度: ☆★★</p>
-          </div>
-        </div>
-        <div class="track-card" data-track="track6">
-          <img src="./data/6.jpeg" alt="Track 6 Thumbnail" />
-          <div class="track-info">
-            <h2>夜に想う</h2>
-            <p>難易度: ☆★★</p>
-          </div>
-        </div>
-      </div>
+      <h1>Cyber Rhythm</h1>
+      <div id="track-selection"></div>
     </div>
 
     <div id="game-container">
-      <div id="game-header">
-        <div id="score-board">Score: 0 | Combo: 0</div>
-        <button id="back-to-top">Back</button>
+      <div id="scene-3d">
+        <div id="lanes-plane">
+          <!-- レーン発光 -->
+          <div class="lane-flash" data-lane="0"></div>
+          <div class="lane-flash" data-lane="1"></div>
+          <div class="lane-flash" data-lane="2"></div>
+          <div class="lane-flash" data-lane="3"></div>
+          <!-- 判定ライン -->
+          <div id="judgement-line"></div>
+          <!-- ノート生成場所 -->
+          <div id="notes-container"></div>
+        </div>
       </div>
-      <div id="lanes-container">
-        <div class="lane" data-key="key1">
-          <div class="hit-button" data-key="key1" data-key-label="1"></div>
+
+      <div id="hud-layer">
+        <div id="score-header">
+          <button id="abort-btn">ABORT</button>
+          <div id="score-display">
+            <div style="font-size: 12px; color: #888">SCORE</div>
+            <div id="score-val">0</div>
+          </div>
         </div>
-        <div class="lane" data-key="key2">
-          <div class="hit-button" data-key="key2" data-key-label="2"></div>
+
+        <div id="combo-container">
+          <div id="combo-num">0</div>
+          <div id="combo-text">COMBO</div>
         </div>
-        <div class="lane" data-key="key3">
-          <div class="hit-button" data-key="key3" data-key-label="3"></div>
-        </div>
-        <div class="lane" data-key="key4">
-          <div class="hit-button" data-key="key4" data-key-label="4"></div>
+
+        <div id="input-grid">
+          <div class="input-zone" data-key="key1">
+            <div class="key-guide">D</div>
+          </div>
+          <div class="input-zone" data-key="key2">
+            <div class="key-guide">F</div>
+          </div>
+          <div class="input-zone" data-key="key3">
+            <div class="key-guide">J</div>
+          </div>
+          <div class="input-zone" data-key="key4">
+            <div class="key-guide">K</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div id="final-score">
-      <h1>🎊 Game Over 🎊</h1>
-      <p id="final-score-text"></p>
-      <button id="restart-button">Restart</button>
+    <div id="result-screen">
+      <h1
+        style="
+          font-family: 'Orbitron';
+          color: var(--neon-blue);
+          font-size: 48px;
+        "
+      >
+        COMPLETE
+      </h1>
+      <div
+        id="result-stats"
+        style="
+          text-align: center;
+          color: #fff;
+          font-size: 24px;
+          line-height: 1.8;
+        "
+      ></div>
+      <button id="retry-btn">RETRY</button>
     </div>
-
-    <audio id="audio"></audio>
 
     <script>
-      const trackData = {
-        track1: {
-          mp3: "./data/1.mp3",
-          json: "./data/1.json",
-          title: "Track 1",
-        },
-        track2: {
-          mp3: "./data/2.mp3",
-          json: "./data/2.json",
-          title: "Track 2",
-        },
-        track3: {
-          mp3: "./data/3.mp3",
-          json: "./data/3.json",
-          title: "Track 3",
-        },
-        track4: {
-          mp3: "./data/4.mp3",
-          json: "./data/4.json",
-          title: "Track 4",
-        },
-        track5: {
-          mp3: "./data/5.mp3",
-          json: "./data/5.json",
-          title: "Track 5",
-        },
-        track6: {
-          mp3: "./data/6.mp3",
-          json: "./data/6.json",
-          title: "Track 6",
-        },
-      };
+      const HIT_POS_Y = 85;
+      const APPROACH_TIME = 1500;
+      const SPAWN_LOOKAHEAD = 1500;
+      const SPEED_PCT = HIT_POS_Y / APPROACH_TIME;
+      // ミス判定のマージンを判定窓(250ms)より広く取る
+      const MISS_THRESHOLD = -300;
 
-      const menu = document.getElementById("menu");
-      const gameContainer = document.getElementById("game-container");
-      const backToTopButton = document.getElementById("back-to-top");
-      const audio = document.getElementById("audio");
-      const scoreBoard = document.getElementById("score-board");
-      const finalScoreOverlay = document.getElementById("final-score");
-      const finalScoreText = document.getElementById("final-score-text");
-      const restartButton = document.getElementById("restart-button");
-      const comboDisplay = document.getElementById("combo-display");
+      const KEY_MAP = { d: "key1", f: "key2", j: "key3", k: "key4" };
+      const LANE_INDEX = { key1: 0, key2: 1, key3: 2, key4: 3 };
 
-      let selectedTrack = null;
-      let notes = [];
-      let tempo = 120.0;
-      let audioStartTime = 0;
-      let score = 0;
-      let combo = 0;
-      let highestCombo = 0;
+      let currentTrack = null;
+      let allNotes = [];
+      let activeNotes = [];
+      let nextSpawnIdx = 0;
+
+      let score = 0,
+        combo = 0,
+        maxCombo = 0;
+      let isPlaying = false;
       let animationId = null;
-      let audioContext = null;
-      let analyser = null;
-      let dataArray = null;
-      let activeKeys = new Set(); // 押されているキーを追跡
-      let longNoteStates = new Map(); // ロングノートの状態管理
 
-      const countdownMs = 2000;
-      const audioPreloadBuffer = 100;
-      const keyMap = { 1: "key1", 2: "key2", 3: "key3", 4: "key4" };
+      let audioCtx, analyser, dataArray;
+      const audio = document.getElementById("main-audio");
 
-      // イコライザービジュアライザーの初期化
-      const visualizerCanvas = document.getElementById("visualizer");
-      const visualizerCtx = visualizerCanvas.getContext("2d");
-      visualizerCanvas.width = window.innerWidth;
-      visualizerCanvas.height = window.innerHeight;
+      const notesContainer = document.getElementById("notes-container");
+      const scoreEl = document.getElementById("score-val");
+      const comboBox = document.getElementById("combo-container");
+      const comboNum = document.getElementById("combo-num");
+      const laneFlashes = document.querySelectorAll(".lane-flash");
 
-      // パーティクルシステム
-      const particlesCanvas = document.getElementById("particles");
-      const particlesCtx = particlesCanvas.getContext("2d");
-      particlesCanvas.width = window.innerWidth;
-      particlesCanvas.height = window.innerHeight;
+      let activeKeys = new Set();
+      let longNoteHold = { key1: null, key2: null, key3: null, key4: null };
 
-      const particles = [];
+      const vCanvas = document.getElementById("visualizer");
+      const vCtx = vCanvas.getContext("2d");
+      const pCanvas = document.getElementById("particles");
+      const pCtx = pCanvas.getContext("2d");
+      let particles = [];
 
-      class Particle {
-        constructor(x, y, color) {
-          this.x = x;
-          this.y = y;
-          this.vx = (Math.random() - 0.5) * 4;
-          this.vy = Math.random() * -5 - 2;
-          this.life = 1;
-          this.color = color;
-          this.size = Math.random() * 4 + 2;
-        }
-
-        update() {
-          this.x += this.vx;
-          this.y += this.vy;
-          this.vy += 0.1;
-          this.life -= 0.02;
-        }
-
-        draw(ctx) {
-          ctx.save();
-          ctx.globalAlpha = this.life;
-          ctx.fillStyle = this.color;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-        }
-      }
-
-      function initAudioContext() {
-        if (!audioContext) {
-          audioContext = new (window.AudioContext ||
-            window.webkitAudioContext)();
-          analyser = audioContext.createAnalyser();
-          analyser.fftSize = 128;
-          analyser.smoothingTimeConstant = 0.8;
-          const source = audioContext.createMediaElementSource(audio);
-          source.connect(analyser);
-          analyser.connect(audioContext.destination);
-          dataArray = new Uint8Array(analyser.frequencyBinCount);
-        }
-      }
-
-      function drawVisualizer() {
-        if (!analyser || !dataArray) return;
-
-        analyser.getByteFrequencyData(dataArray);
-
-        visualizerCtx.fillStyle = "rgba(0, 0, 0, 0.3)";
-        visualizerCtx.fillRect(
-          0,
-          0,
-          visualizerCanvas.width,
-          visualizerCanvas.height
-        );
-
-        const barWidth = (visualizerCanvas.width / dataArray.length) * 2;
-        let x = 0;
-
-        for (let i = 0; i < dataArray.length; i++) {
-          const barHeight =
-            (dataArray[i] / 255) * visualizerCanvas.height * 0.8;
-
-          const hue = (i / dataArray.length) * 360;
-          visualizerCtx.fillStyle = `hsla(${hue}, 100%, 50%, 0.8)`;
-
-          visualizerCtx.fillRect(
-            x,
-            visualizerCanvas.height - barHeight,
-            barWidth,
-            barHeight
-          );
-
-          x += barWidth + 1;
-        }
-
-        requestAnimationFrame(drawVisualizer);
-      }
-
-      function updateParticles() {
-        particlesCtx.clearRect(
-          0,
-          0,
-          particlesCanvas.width,
-          particlesCanvas.height
-        );
-
-        for (let i = particles.length - 1; i >= 0; i--) {
-          particles[i].update();
-          particles[i].draw(particlesCtx);
-
-          if (particles[i].life <= 0) {
-            particles.splice(i, 1);
-          }
-        }
-
-        requestAnimationFrame(updateParticles);
-      }
-
-      function createHitParticles(x, y, color) {
-        for (let i = 0; i < 20; i++) {
-          particles.push(new Particle(x, y, color));
-        }
-      }
-
-      function getApproachTime() {
-        const beatsPerMeasure = 4;
-        const measureMs = (60000 / tempo) * beatsPerMeasure;
-        return measureMs * 1.5;
-      }
-
-      function getSpeed() {
-        const distance = window.innerHeight - 150;
-        const approachMs = getApproachTime();
-        return distance / approachMs;
-      }
-
-      document.querySelectorAll(".track-card").forEach((card) => {
-        card.addEventListener("click", () => {
-          const trackKey = card.dataset.track;
-          selectedTrack = trackData[trackKey];
-          menu.style.display = "none";
-          gameContainer.style.display = "flex";
-          audio.src = selectedTrack.mp3;
-          initAudioContext();
-          startGame();
-        });
+      window.addEventListener("load", () => {
+        resizeCanvases();
+        window.addEventListener("resize", resizeCanvases);
+        loadTracks();
+        setupInputs();
+        requestAnimationFrame(visualLoop);
       });
 
-      backToTopButton.addEventListener("click", resetGame);
-      restartButton.addEventListener("click", resetGame);
+      function resizeCanvases() {
+        vCanvas.width = window.innerWidth;
+        vCanvas.height = window.innerHeight;
+        pCanvas.width = window.innerWidth;
+        pCanvas.height = window.innerHeight;
+      }
+
+      function loadTracks() {
+        fetch("data/tracks.json")
+          .then((r) => r.json())
+          .then((tracks) => {
+            const list = document.getElementById("track-selection");
+            list.innerHTML = "";
+            tracks.forEach((t) => {
+              const el = document.createElement("div");
+              el.className = "track-card";
+              el.innerHTML = `<img src="${t.cover}"><div class="track-info"><h2>${t.title}</h2><p>Lv.${t.difficulty}</p></div>`;
+              el.onclick = () => initGame(t);
+              list.appendChild(el);
+            });
+          })
+          .catch((e) => console.error("Error loading tracks", e));
+      }
+
+      function stopGameLoop() {
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+      }
 
       function resetGame() {
-        if (animationId) cancelAnimationFrame(animationId);
-        menu.style.display = "block";
-        gameContainer.style.display = "none";
-        finalScoreOverlay.style.display = "none";
-        notes = [];
+        stopGameLoop();
+
         score = 0;
         combo = 0;
-        highestCombo = 0;
-        audioStartTime = 0;
-        particles.length = 0;
-        activeKeys.clear();
-        longNoteStates.clear();
-        document.querySelectorAll(".note").forEach((note) => note.remove());
-        audio.pause();
-        audio.currentTime = 0;
-        updateScoreBoard();
+        maxCombo = 0;
+        updateScore();
+        comboBox.classList.remove("show");
 
-        // タイマーのクリーンアップ
-        if (window.__spawnTimers) {
-          window.__spawnTimers.forEach((id) => clearTimeout(id));
-          window.__spawnTimers.length = 0;
-        }
-        window.__spawnScheduled = false;
+        allNotes = [];
+        activeNotes = [];
+        nextSpawnIdx = 0;
+        notesContainer.innerHTML = "";
+
+        activeKeys.clear();
+        longNoteHold = { key1: null, key2: null, key3: null, key4: null };
+        laneFlashes.forEach((el) => el.classList.remove("active"));
+
+        isPlaying = false;
       }
 
-      async function startGame() {
-        score = 0;
-        combo = 0;
-        highestCombo = 0;
-        activeKeys.clear();
-        longNoteStates.clear();
-        updateScoreBoard();
+      async function initGame(track) {
+        currentTrack = track;
+        resetGame();
 
-        const response = await fetch(selectedTrack.json);
-        const jsonData = await response.json();
+        document.getElementById("menu").style.display = "none";
+        document.getElementById("result-screen").style.display = "none";
+        document.getElementById("game-container").style.display = "block";
 
-        tempo = jsonData.metadata.tempo || 120.0;
-        notes = jsonData.notes.map((note) => ({
-          ...note,
-          type: mapToFourLanes(note.type),
-        }));
-
-        spawnNotes(notes);
-
-        audio.load();
-        await new Promise((resolve) => {
-          audio.addEventListener("canplaythrough", resolve, { once: true });
-        });
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, countdownMs - audioPreloadBuffer)
-        );
-
-        const playPromise = audio.play();
-        if (playPromise) {
-          await playPromise.catch((e) => console.log("Audio play error:", e));
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 256;
+          const src = audioCtx.createMediaElementSource(audio);
+          src.connect(analyser);
+          analyser.connect(audioCtx.destination);
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
         }
 
-        audioStartTime = performance.now();
+        audio.src = track.audio;
+        const res = await fetch(track.json);
+        const data = await res.json();
 
-        requestAnimationFrame(gameLoop);
-        drawVisualizer();
-        updateParticles();
+        allNotes = data.notes
+          .map((n) => ({
+            ...n,
+            laneKey: normalizeLane(n.type),
+            start: Number(n.start_msec),
+            dur: Number(n.duration_msec || 0),
+            spawned: false,
+            hit: false,
+            processed: false,
+            el: null,
+          }))
+          .sort((a, b) => a.start - b.start);
+
+        try {
+          await audio.play();
+          isPlaying = true;
+          gameLoop();
+        } catch (e) {
+          console.error(e);
+        }
       }
 
-      function mapToFourLanes(keyType) {
-        const mapping = {
+      function normalizeLane(key) {
+        const map = {
           key1: "key1",
           key2: "key2",
           key3: "key3",
@@ -780,380 +705,367 @@
           key5: "key3",
           key6: "key4",
         };
-        return mapping[keyType] || keyType;
+        return map[key] || "key1";
       }
 
-      function spawnNotes(noteData) {
-        if (!window.__spawnTimers) window.__spawnTimers = [];
-        window.__spawnTimers.forEach((id) => clearTimeout(id));
-        window.__spawnTimers.length = 0;
-
-        function createNoteElement(note) {
-          const speed = getSpeed();
-          const lane = document.querySelector(`.lane[data-key="${note.type}"]`);
-          if (!lane) return;
-
-          const noteElement = document.createElement("div");
-          noteElement.classList.add("note");
-
-          const noteDuration = note.duration_msec || 200;
-          const isLongNote = noteDuration > 500; // 500ms以上をロングノートとする
-
-          if (isLongNote) {
-            noteElement.classList.add("long-note");
-          }
-
-          const noteHeight = Math.max(20, (noteDuration * speed) / 2);
-          noteElement.style.height = noteHeight + "px";
-
-          noteElement.dataset.startMsec = note.start_msec;
-          noteElement.dataset.endMsec = note.start_msec + noteDuration;
-          noteElement.dataset.duration = noteDuration;
-          noteElement.dataset.isLongNote = isLongNote;
-          noteElement.dataset.hit = "false";
-          noteElement.dataset.longNoteActive = "false";
-          lane.appendChild(noteElement);
+      function visualLoop() {
+        if (!isPlaying) {
+          drawVisualizer();
+          updateParticles();
+          requestAnimationFrame(visualLoop);
         }
-
-        if (window.__spawnScheduled) {
-          window.removeEventListener(
-            "__spawn_schedule",
-            window.__spawnScheduleHandler
-          );
-        }
-        window.__spawnScheduled = false;
-
-        const onPlaying = () => {
-          if (window.__spawnScheduled) return;
-          window.__spawnScheduled = true;
-
-          const startPerfMs = performance.now() - audio.currentTime * 1000;
-          const approachTime = getApproachTime();
-          const LOOK_AHEAD = approachTime + 120;
-
-          for (const note of noteData) {
-            const nowAudioMs = performance.now() - startPerfMs;
-            const spawnAtAudioMs = note.start_msec - approachTime;
-            let delay = spawnAtAudioMs - nowAudioMs;
-            delay -= 120;
-
-            if (delay <= 0) {
-              if (!audio.paused) createNoteElement(note);
-              continue;
-            }
-
-            const id = setTimeout(() => {
-              if (!audio.paused) createNoteElement(note);
-            }, delay);
-
-            window.__spawnTimers.push(id);
-          }
-
-          audio.removeEventListener("playing", onPlaying);
-        };
-
-        audio.addEventListener("playing", onPlaying, { once: true });
-        if (!audio.paused) {
-          onPlaying();
-        }
-
-        const cleanup = () => {
-          window.__spawnTimers.forEach((id) => clearTimeout(id));
-          window.__spawnTimers.length = 0;
-          window.__spawnScheduled = false;
-          audio.removeEventListener("ended", cleanup);
-          audio.removeEventListener("pause", cleanup);
-        };
-        audio.addEventListener("ended", cleanup, { once: true });
-        audio.addEventListener("pause", cleanup, { once: true });
       }
 
-      function gameLoop(timestamp) {
-        updateNotes();
+      function gameLoop() {
         animationId = requestAnimationFrame(gameLoop);
-      }
 
-      function updateNotes() {
-        const currentAudioTime = audio.currentTime * 1000;
-        const speed = getSpeed();
-        const approachTime = getApproachTime();
+        drawVisualizer();
+        updateParticles();
 
-        document.querySelectorAll(".note").forEach((note) => {
-          if (
-            note.dataset.hit === "true" &&
-            note.dataset.isLongNote === "false"
-          )
-            return;
+        if (!isPlaying) return;
+        if (audio.paused) return;
 
-          const startMsec = parseInt(note.dataset.startMsec, 10);
-          const endMsec = parseInt(note.dataset.endMsec, 10);
-          const isLongNote = note.dataset.isLongNote === "true";
-          const timeUntilHit = startMsec - currentAudioTime;
-          const t = approachTime - timeUntilHit;
+        const now = audio.currentTime * 1000;
 
-          if (t < 0) {
-            note.style.transform = `translateY(-100px)`;
-            note.style.opacity = "0";
+        // 1. Spawn
+        while (nextSpawnIdx < allNotes.length) {
+          const note = allNotes[nextSpawnIdx];
+          if (!note.spawned && note.start <= now + SPAWN_LOOKAHEAD) {
+            spawnNote(note);
+            nextSpawnIdx++;
           } else {
-            note.style.opacity = "1";
-            const y = t * speed;
+            break;
+          }
+        }
 
-            // ロングノートの処理
-            if (isLongNote && note.dataset.longNoteActive === "true") {
-              const timeSinceStart = currentAudioTime - startMsec;
-              const duration = endMsec - startMsec;
+        // 2. Update
+        const toRemove = [];
 
-              if (timeSinceStart >= duration) {
-                // ロングノート完了
-                if (note.dataset.hit === "false") {
-                  showFeedback(note.parentElement, "Perfect Long!", "#00ff00");
-                  const baseScore = 20;
-                  const bonus = Math.floor(combo / 10);
-                  score += baseScore * (1 + bonus);
-                  combo++;
-                  if (combo > highestCombo) highestCombo = combo;
-                  updateScoreBoard();
-                  updateComboDisplay();
-
-                  const laneRect = note.parentElement.getBoundingClientRect();
-                  const hitX = laneRect.left + laneRect.width / 2;
-                  const hitY = window.innerHeight - 150;
-                  createHitParticles(hitX, hitY, "#00ff00");
-                }
-                note.dataset.hit = "true";
-                note.style.opacity = "0";
-                longNoteStates.delete(note);
-              } else {
-                // ロングノート進行中 - 上部を消していく
-                const progress = timeSinceStart / duration;
-                const originalHeight =
-                  (parseFloat(note.dataset.duration) * speed) / 2;
-                const currentHeight = originalHeight * (1 - progress);
-                note.style.height = Math.max(20, currentHeight) + "px";
-                note.style.transform = `translateY(${
-                  y + originalHeight * progress
-                }px)`;
+        activeNotes.forEach((note, idx) => {
+          // 処理済み(Processed)ノートの片付け
+          if (note.processed) {
+            // 成功(Hit)していて、ロングノートホールド中でなければ削除
+            if (note.hit) {
+              if (note.el) note.el.style.display = "none";
+              if (longNoteHold[note.laneKey] !== note) {
+                toRemove.push(idx);
               }
             } else {
-              if (y > window.innerHeight) {
-                if (note.dataset.hit === "false") {
-                  showFeedback(note.parentElement, "Miss", "#ff0000");
-                  combo = 0;
-                  note.dataset.hit = "true";
-                  note.style.opacity = "0";
-                  updateScoreBoard();
-                  updateComboDisplay();
-                  if (isLongNote) {
-                    longNoteStates.delete(note);
-                  }
+              // Missしたノート: 透明にして画面外へ流す
+              if (note.el) note.el.style.opacity = 0.3;
+              const endT = note.start + note.dur;
+              if (endT < now - 1000) toRemove.push(idx);
+            }
+            // 位置計算だけ続ける(Miss用)
+            if (note.hit && note.processed) return;
+          }
+
+          // 位置計算
+          const timeToHit = note.start - now;
+          let currentTop = HIT_POS_Y - timeToHit * SPEED_PCT;
+
+          // ロングノートホールド中
+          if (longNoteHold[note.laneKey] === note) {
+            const endTime = note.start + note.dur;
+            const remain = endTime - now;
+            if (remain <= 0) {
+              completeLongNote(note);
+            } else {
+              note.el.style.top = HIT_POS_Y + "%";
+              const hPct = Math.max(0, remain * SPEED_PCT);
+              note.el.style.height = hPct + "%";
+              note.el.style.filter = "brightness(1.5)";
+              if (Math.random() > 0.5) spawnSparkle(note.laneKey);
+            }
+          } else {
+            // 通常移動
+            if (note.el) {
+              note.el.style.top = currentTop + "%";
+
+              // --- Miss判定 (ここが修正ポイント) ---
+              // まだHitしておらず、processedでもない場合
+              if (!note.processed && !note.hit) {
+                // 時間超過でMiss
+                if (timeToHit < MISS_THRESHOLD) {
+                  triggerMiss(note);
                 }
-              } else {
-                note.style.transform = `translateY(${y}px)`;
               }
             }
           }
         });
 
-        if (
-          audio.ended &&
-          document.querySelectorAll('.note[data-hit="false"]').length === 0
-        ) {
-          setTimeout(showFinalScore, 2000);
+        for (let i = toRemove.length - 1; i >= 0; i--) {
+          removeNote(toRemove[i]);
         }
+
+        if (audio.ended) endGame();
       }
 
-      function updateScoreBoard() {
-        scoreBoard.textContent = `Score: ${score} | Combo: ${combo}`;
+      function spawnNote(note) {
+        if (note.spawned) return;
+        note.spawned = true;
+
+        const el = document.createElement("div");
+        el.className = "note";
+        if (note.dur > 0) el.classList.add("long");
+        el.dataset.lane = LANE_INDEX[note.laneKey];
+
+        const hPct = Math.max(2, note.dur * SPEED_PCT);
+        el.style.height = hPct + "%";
+        el.style.top = "-100%";
+
+        notesContainer.appendChild(el);
+        note.el = el;
+        activeNotes.push(note);
       }
 
-      function updateComboDisplay() {
-        if (combo >= 10 && combo % 10 === 0) {
-          comboDisplay.textContent = `${combo} COMBO!`;
-          comboDisplay.classList.add("show");
-          setTimeout(() => {
-            comboDisplay.classList.remove("show");
-          }, 800);
+      function removeNote(idx) {
+        if (idx >= activeNotes.length) return;
+        const note = activeNotes[idx];
+        if (note.el && note.el.parentNode) {
+          note.el.parentNode.removeChild(note.el);
         }
+        note.el = null;
+        activeNotes.splice(idx, 1);
       }
 
-      function handleHit(laneKey) {
-        const lane = document.querySelector(`.lane[data-key="${laneKey}"]`);
-        const notesInLane = Array.from(
-          lane.querySelectorAll('.note[data-hit="false"]')
-        );
-        if (notesInLane.length === 0) return;
+      /* --- 入力ハンドリング --- */
+      function setupInputs() {
+        const zones = document.querySelectorAll(".input-zone");
+        zones.forEach((z) => {
+          const k = z.dataset.key;
+          const start = (e) => {
+            if (e.cancelable) e.preventDefault();
+            handleInputStart(k);
+          };
+          const end = (e) => {
+            if (e.cancelable) e.preventDefault();
+            handleInputEnd(k);
+          };
 
-        let closestNote = null;
-        let minDistance = Infinity;
-        const currentAudioTime = audio.currentTime * 1000;
-
-        notesInLane.forEach((note) => {
-          const startMsec = parseInt(note.dataset.startMsec, 10);
-          const diff = Math.abs(currentAudioTime - startMsec);
-          if (diff < minDistance) {
-            minDistance = diff;
-            closestNote = note;
-          }
+          z.addEventListener("touchstart", start, { passive: false });
+          z.addEventListener("touchend", end);
+          z.addEventListener("mousedown", start);
+          z.addEventListener("mouseup", end);
+          z.addEventListener("mouseout", end);
         });
 
-        if (!closestNote) return;
+        document.addEventListener("keydown", (e) => {
+          if (e.repeat || !isPlaying) return;
+          const k = KEY_MAP[e.key.toLowerCase()];
+          if (k) handleInputStart(k);
+        });
+        document.addEventListener("keyup", (e) => {
+          const k = KEY_MAP[e.key.toLowerCase()];
+          if (k) handleInputEnd(k);
+        });
 
-        const isLongNote = closestNote.dataset.isLongNote === "true";
-        const diff = minDistance;
-        let feedbackText = "";
-        let baseScore = 0;
-        let feedbackColor = "#ffffff";
+        document.getElementById("abort-btn").onclick = () => {
+          audio.pause();
+          isPlaying = false;
+          resetGame();
+          document.getElementById("game-container").style.display = "none";
+          document.getElementById("menu").style.display = "flex";
+          requestAnimationFrame(visualLoop);
+        };
+        document.getElementById("retry-btn").onclick = () => {
+          if (currentTrack) initGame(currentTrack);
+        };
+      }
 
-        if (diff <= 50) {
-          baseScore = 10;
-          feedbackText = "Perfect!";
-          feedbackColor = "#00ff00";
-        } else if (diff <= 100) {
-          baseScore = 7;
-          feedbackText = "Great!";
-          feedbackColor = "#00aaff";
-        } else if (diff <= 150) {
-          baseScore = 4;
-          feedbackText = "Good";
-          feedbackColor = "#ffff00";
-        } else if (diff <= 250) {
-          baseScore = 2;
-          feedbackText = "OK";
-          feedbackColor = "#ff8800";
-        } else {
-          return;
+      function handleInputStart(key) {
+        if (activeKeys.has(key)) return;
+        activeKeys.add(key);
+
+        const idx = LANE_INDEX[key];
+        const flash = document.querySelector(`.lane-flash[data-lane="${idx}"]`);
+        if (flash) flash.classList.add("active");
+
+        const now = audio.currentTime * 1000;
+
+        const target = activeNotes.find(
+          (n) =>
+            n.laneKey === key && !n.processed && Math.abs(n.start - now) < 250
+        );
+
+        if (target) {
+          const diff = Math.abs(target.start - now);
+          let j = "BAD",
+            pts = 0,
+            col = "#aaa";
+          if (diff < 50) {
+            j = "PERFECT";
+            pts = 500;
+            col = "#f0f";
+          } else if (diff < 120) {
+            j = "GREAT";
+            pts = 300;
+            col = "#0ff";
+          } else if (diff < 250) {
+            j = "GOOD";
+            pts = 100;
+            col = "#0f0";
+          }
+
+          showFeedback(key, j, col);
+          spawnHitEffect(key, col);
+
+          if (target.dur > 500) {
+            longNoteHold[key] = target;
+            target.hit = true;
+            addScore(pts);
+          } else {
+            target.hit = true;
+            target.processed = true;
+            if (target.el) target.el.style.display = "none";
+            addScore(pts);
+          }
         }
+      }
 
-        if (isLongNote) {
-          // ロングノート開始
-          closestNote.dataset.longNoteActive = "true";
-          longNoteStates.set(closestNote, {
-            laneKey: laneKey,
-            startTime: currentAudioTime,
+      function handleInputEnd(key) {
+        activeKeys.delete(key);
+        const idx = LANE_INDEX[key];
+        const flash = document.querySelector(`.lane-flash[data-lane="${idx}"]`);
+        if (flash) flash.classList.remove("active");
+
+        const note = longNoteHold[key];
+        if (note) {
+          const now = audio.currentTime * 1000;
+          const end = note.start + note.dur;
+
+          // processed済みの場合はすでにCompleteしているので何もしない（重要）
+          if (note.processed) {
+            longNoteHold[key] = null;
+            return;
+          }
+
+          if (now < end - 200) {
+            triggerMiss(note);
+          } else {
+            completeLongNote(note);
+          }
+          longNoteHold[key] = null;
+        }
+      }
+
+      function completeLongNote(note) {
+        if (note.processed) return;
+        note.processed = true;
+        note.hit = true;
+        if (note.el) note.el.style.display = "none";
+        addScore(500);
+        showFeedback(note.laneKey, "COMPLETE", "#ff0");
+        // ホールド解除（重要：これをしないとhandleInputEndで再判定される恐れ）
+        if (longNoteHold[note.laneKey] === note) {
+          longNoteHold[note.laneKey] = null;
+        }
+      }
+
+      function triggerMiss(note) {
+        if (note.processed) return;
+        note.processed = true;
+        note.hit = false;
+        if (note.el) note.el.style.opacity = 0.3;
+
+        if (longNoteHold[note.laneKey] === note)
+          longNoteHold[note.laneKey] = null;
+
+        combo = 0;
+        updateScore();
+        showFeedback(note.laneKey, "MISS", "#555");
+      }
+
+      /* --- Visuals --- */
+      function drawVisualizer() {
+        if (!analyser) return;
+        analyser.getByteFrequencyData(dataArray);
+        vCtx.clearRect(0, 0, vCanvas.width, vCanvas.height);
+        const barW = vCanvas.width / dataArray.length;
+        for (let i = 0; i < dataArray.length; i++) {
+          const val = dataArray[i];
+          const h = (val / 255) * vCanvas.height * 0.4;
+          const hue = (i / dataArray.length) * 360;
+          vCtx.fillStyle = `hsla(${hue}, 80%, 50%, 0.2)`;
+          vCtx.fillRect(i * barW, vCanvas.height - h, barW + 1, h);
+        }
+      }
+
+      function updateParticles() {
+        pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+          let p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.04;
+          if (p.life <= 0) particles.splice(i, 1);
+          else {
+            pCtx.globalAlpha = p.life;
+            pCtx.fillStyle = p.c;
+            pCtx.beginPath();
+            pCtx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+            pCtx.fill();
+          }
+        }
+        pCtx.globalAlpha = 1;
+      }
+
+      function spawnHitEffect(key, col) {
+        const zone = document.querySelector(`.input-zone[data-key="${key}"]`);
+        const rect = zone.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top;
+        for (let i = 0; i < 12; i++) {
+          particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 10,
+            vy: (Math.random() - 0.5) * 15 - 5,
+            life: 1,
+            c: col,
+            s: Math.random() * 5 + 2,
           });
-          showFeedback(lane, feedbackText, feedbackColor);
-        } else {
-          // 通常ノート
-          combo++;
-          if (combo > highestCombo) highestCombo = combo;
-          const bonus = Math.floor(combo / 10);
-          const gainedScore = baseScore * (1 + bonus);
-          score += gainedScore;
-          updateScoreBoard();
-          updateComboDisplay();
-
-          const laneRect = lane.getBoundingClientRect();
-          const hitX = laneRect.left + laneRect.width / 2;
-          const hitY = window.innerHeight - 150;
-          createHitParticles(hitX, hitY, feedbackColor);
-
-          showFeedback(lane, feedbackText, feedbackColor);
-          closestNote.dataset.hit = "true";
-          closestNote.style.opacity = "0";
         }
       }
-
-      function handleLongNoteRelease(laneKey) {
-        // ロングノートのリリース処理
-        const lane = document.querySelector(`.lane[data-key="${laneKey}"]`);
-        const activeLongNotes = Array.from(
-          lane.querySelectorAll('.note.long-note[data-long-note-active="true"]')
-        );
-
-        activeLongNotes.forEach((note) => {
-          if (longNoteStates.has(note)) {
-            const currentAudioTime = audio.currentTime * 1000;
-            const endMsec = parseInt(note.dataset.endMsec, 10);
-            const startMsec = parseInt(note.dataset.startMsec, 10);
-            const releaseDiff = Math.abs(currentAudioTime - endMsec);
-
-            // 早すぎるリリース
-            if (currentAudioTime < endMsec - 200) {
-              showFeedback(lane, "Too Early!", "#ff0000");
-              combo = 0;
-              note.dataset.hit = "true";
-              note.style.opacity = "0";
-              longNoteStates.delete(note);
-              updateScoreBoard();
-            }
-          }
-        });
+      function spawnSparkle(key) {
+        spawnHitEffect(key, "#fff");
       }
 
-      document.querySelectorAll(".hit-button").forEach((button) => {
-        button.addEventListener("click", () => {
-          const laneKey = button.dataset.key;
-          button.classList.add("active");
-          setTimeout(() => button.classList.remove("active"), 100);
-          handleHit(laneKey);
-        });
-      });
+      function showFeedback(key, txt, col) {
+        const zone = document.querySelector(`.input-zone[data-key="${key}"]`);
+        const old = zone.querySelector(".feedback-text");
+        if (old) old.remove();
 
-      document.addEventListener("keydown", (e) => {
-        if (!audio.src || gameContainer.style.display === "none") return;
-        const laneKey = keyMap[e.key];
-        if (laneKey && !activeKeys.has(e.key)) {
-          e.preventDefault();
-          activeKeys.add(e.key);
-          const button = document.querySelector(
-            `.hit-button[data-key="${laneKey}"]`
-          );
-          if (button) {
-            button.classList.add("active");
-            handleHit(laneKey);
-          }
-        }
-      });
-
-      document.addEventListener("keyup", (e) => {
-        const laneKey = keyMap[e.key];
-        if (laneKey) {
-          activeKeys.delete(e.key);
-          const button = document.querySelector(
-            `.hit-button[data-key="${laneKey}"]`
-          );
-          if (button) {
-            button.classList.remove("active");
-          }
-          handleLongNoteRelease(laneKey);
-        }
-      });
-
-      function showFeedback(lane, text, color) {
-        const feedback = document.createElement("div");
-        feedback.textContent = text;
-        feedback.classList.add("feedback");
-        feedback.style.color = color;
-        lane.appendChild(feedback);
-        setTimeout(() => feedback.remove(), 1000);
+        const el = document.createElement("div");
+        el.className = "feedback-text";
+        el.innerText = txt;
+        el.style.color = col;
+        zone.appendChild(el);
+        setTimeout(() => el.remove(), 600);
       }
 
-      function showFinalScore() {
-        if (animationId) cancelAnimationFrame(animationId);
-        finalScoreOverlay.style.display = "flex";
-
-        let rank = "C";
-        const accuracy =
-          highestCombo > 0 ? (score / (highestCombo * 10)) * 100 : 0;
-
-        if (accuracy >= 95) rank = "S";
-        else if (accuracy >= 90) rank = "A";
-        else if (accuracy >= 80) rank = "B";
-
-        finalScoreText.innerHTML = `
-          <div style="font-size: 48px; margin: 20px;">Rank: ${rank}</div>
-          Final Score: ${score}<br>
-          Highest Combo: ${highestCombo}<br>
-          Accuracy: ${accuracy.toFixed(1)}%
-        `;
+      function addScore(p) {
+        score += p + combo * 10;
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
+        updateScore();
+        comboNum.innerText = combo;
+        comboBox.classList.remove("show");
+        void comboBox.offsetWidth;
+        if (combo > 1) comboBox.classList.add("show");
+      }
+      function updateScore() {
+        scoreEl.innerText = score;
       }
 
-      window.addEventListener("resize", () => {
-        visualizerCanvas.width = window.innerWidth;
-        visualizerCanvas.height = window.innerHeight;
-        particlesCanvas.width = window.innerWidth;
-        particlesCanvas.height = window.innerHeight;
-      });
+      function endGame() {
+        stopGameLoop();
+        isPlaying = false;
+        document.getElementById("result-screen").style.display = "flex";
+        document.getElementById(
+          "result-stats"
+        ).innerHTML = `SCORE: ${score}<br>MAX COMBO: ${maxCombo}`;
+      }
     </script>
   </body>
 </html>

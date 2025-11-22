@@ -1,0 +1,66 @@
+[
+  {
+    "id": 1,
+    "title": "時空を超えた愛 2",
+    "difficulty": 1,
+    "cover": "data/時空を超えた愛.jpeg",
+    "audio": "data/時空を超えた愛.mp3",
+    "json": "data/時空を超えた愛 2_normal.json"
+  },
+  {
+    "id": 2,
+    "title": "時空を超えた愛 2",
+    "difficulty": 3,
+    "cover": "data/時空を超えた愛.jpeg",
+    "audio": "data/時空を超えた愛.mp3",
+    "json": "data/時空を超えた愛 2_hard.json"
+  },
+  {
+    "id": 3,
+    "title": "戦うサラリーマンの唄",
+    "difficulty": 2,
+    "cover": "data/戦うサラリーマンの唄.jpeg",
+    "audio": "data/戦うサラリーマンの唄.mp3",
+    "json": "data/戦うサラリーマンの唄_normal.json"
+  },
+  {
+    "id": 4,
+    "title": "戦うサラリーマンの唄",
+    "difficulty": 3,
+    "cover": "data/戦うサラリーマンの唄.jpeg",
+    "audio": "data/戦うサラリーマンの唄.mp3",
+    "json": "data/戦うサラリーマンの唄_hard.json"
+  },
+  {
+    "id": 5,
+    "title": "One Sock",
+    "difficulty": 3,
+    "cover": "data/One Sock.jpeg",
+    "audio": "data/One Sock.mp3",
+    "json": "data/One Sock_normal.json"
+  },
+  {
+    "id": 5,
+    "title": "One Sock",
+    "difficulty": 3,
+    "cover": "data/One Sock.jpeg",
+    "audio": "data/One Sock.mp3",
+    "json": "data/One Sock_hard.json"
+  },
+  {
+    "id": 6,
+    "title": "Yoru ni Omou",
+    "difficulty": 2,
+    "cover": "data/Yoru ni Omou.jpeg",
+    "audio": "data/Yoru ni Omou.mp3",
+    "json": "data/Yoru ni Omou_normal.json"
+  },
+  {
+    "id": 6,
+    "title": "Yoru ni Omou",
+    "difficulty": 2,
+    "cover": "data/Yoru ni Omou.jpeg",
+    "audio": "data/Yoru ni Omou.mp3",
+    "json": "data/Yoru ni Omou_hard.json"
+  }
+]
