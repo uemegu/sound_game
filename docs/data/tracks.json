@@ -1,46 +1,14 @@
 [
   {
     "id": 1,
-    "title": "時空を超えた愛 2",
-    "difficulty": 1,
-    "cover": "data/時空を超えた愛.jpeg",
-    "audio": "data/時空を超えた愛.mp3",
-    "json": "data/時空を超えた愛 2_normal.json"
-  },
-  {
-    "id": 2,
-    "title": "時空を超えた愛 2",
-    "difficulty": 3,
-    "cover": "data/時空を超えた愛.jpeg",
-    "audio": "data/時空を超えた愛.mp3",
-    "json": "data/時空を超えた愛 2_hard.json"
-  },
-  {
-    "id": 3,
-    "title": "戦うサラリーマンの唄",
-    "difficulty": 2,
-    "cover": "data/戦うサラリーマンの唄.jpeg",
-    "audio": "data/戦うサラリーマンの唄.mp3",
-    "json": "data/戦うサラリーマンの唄_normal.json"
-  },
-  {
-    "id": 4,
-    "title": "戦うサラリーマンの唄",
-    "difficulty": 3,
-    "cover": "data/戦うサラリーマンの唄.jpeg",
-    "audio": "data/戦うサラリーマンの唄.mp3",
-    "json": "data/戦うサラリーマンの唄_hard.json"
-  },
-  {
-    "id": 5,
     "title": "One Sock",
-    "difficulty": 3,
+    "difficulty": 2,
     "cover": "data/One Sock.jpeg",
     "audio": "data/One Sock.mp3",
     "json": "data/One Sock_normal.json"
   },
   {
-    "id": 5,
+    "id": 2,
     "title": "One Sock",
     "difficulty": 3,
     "cover": "data/One Sock.jpeg",
@@ -48,7 +16,7 @@
     "json": "data/One Sock_hard.json"
   },
   {
-    "id": 6,
+    "id": 3,
     "title": "Yoru ni Omou",
     "difficulty": 2,
     "cover": "data/Yoru ni Omou.jpeg",
@@ -56,11 +24,107 @@
     "json": "data/Yoru ni Omou_normal.json"
   },
   {
-    "id": 6,
+    "id": 4,
     "title": "Yoru ni Omou",
-    "difficulty": 2,
+    "difficulty": 3,
     "cover": "data/Yoru ni Omou.jpeg",
     "audio": "data/Yoru ni Omou.mp3",
     "json": "data/Yoru ni Omou_hard.json"
+  },
+  {
+    "id": 5,
+    "title": "時空を超えた愛 2",
+    "difficulty": 2,
+    "cover": "data/時空を超えた愛 2.jpeg",
+    "audio": "data/時空を超えた愛 2.mp3",
+    "json": "data/時空を超えた愛 2_normal.json"
+  },
+  {
+    "id": 6,
+    "title": "時空を超えた愛 2",
+    "difficulty": 3,
+    "cover": "data/時空を超えた愛 2.jpeg",
+    "audio": "data/時空を超えた愛 2.mp3",
+    "json": "data/時空を超えた愛 2_hard.json"
+  },
+  {
+    "id": 7,
+    "title": "戦うサラリーマンの唄",
+    "difficulty": 2,
+    "cover": "data/戦うサラリーマンの唄.jpeg",
+    "audio": "data/戦うサラリーマンの唄.mp3",
+    "json": "data/戦うサラリーマンの唄_normal.json"
+  },
+  {
+    "id": 8,
+    "title": "戦うサラリーマンの唄",
+    "difficulty": 3,
+    "cover": "data/戦うサラリーマンの唄.jpeg",
+    "audio": "data/戦うサラリーマンの唄.mp3",
+    "json": "data/戦うサラリーマンの唄_hard.json"
+  },
+  {
+    "id": 9,
+    "title": "あやさばいばー",
+    "difficulty": 2,
+    "cover": "data/あやさばいばー.jpeg",
+    "audio": "data/あやさばいばー.mp3",
+    "json": "data/あやさばいばー_normal.json"
+  },
+  {
+    "id": 10,
+    "title": "あやさばいばー",
+    "difficulty": 3,
+    "cover": "data/あやさばいばー.jpeg",
+    "audio": "data/あやさばいばー.mp3",
+    "json": "data/あやさばいばー_hard.json"
+  },
+  {
+    "id": 11,
+    "title": "しょうたとサンズ",
+    "difficulty": 2,
+    "cover": "data/しょうたとサンズ.jpeg",
+    "audio": "data/しょうたとサンズ.mp3",
+    "json": "data/しょうたとサンズ_normal.json"
+  },
+  {
+    "id": 12,
+    "title": "しょうたとサンズ",
+    "difficulty": 3,
+    "cover": "data/しょうたとサンズ.jpeg",
+    "audio": "data/しょうたとサンズ.mp3",
+    "json": "data/しょうたとサンズ_hard.json"
+  },
+  {
+    "id": 13,
+    "title": "(Mic check, one two...)",
+    "difficulty": 2,
+    "cover": "data/(Mic check, one two...).jpeg",
+    "audio": "data/(Mic check, one two...).mp3",
+    "json": "data/(Mic check, one two...)_normal.json"
+  },
+  {
+    "id": 14,
+    "title": "(Mic check, one two...)",
+    "difficulty": 3,
+    "cover": "data/(Mic check, one two...).jpeg",
+    "audio": "data/(Mic check, one two...).mp3",
+    "json": "data/(Mic check, one two...)_hard.json"
+  },
+  {
+    "id": 15,
+    "title": "ティナのケモ耳クッキング",
+    "difficulty": 2,
+    "cover": "data/CameraON.jpeg",
+    "audio": "data/CameraON.mp3",
+    "json": "data/CameraON_normal.json"
+  },
+  {
+    "id": 16,
+    "title": "ティナのケモ耳クッキング",
+    "difficulty": 3,
+    "cover": "data/CameraON.jpeg",
+    "audio": "data/CameraON.mp3",
+    "json": "data/CameraON_hard.json"
   }
 ]

@@ -26,14 +26,14 @@
         box-sizing: border-box;
         user-select: none;
         -webkit-user-select: none;
-        touch-action: none;
+        /* touch-action: none; */ /* Removed to enable scrolling on touch devices */
       }
 
       html,
       body {
-        height: 100%;
         margin: 0;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
         background-color: var(--bg-dark);
         font-family: "Rajdhani", sans-serif;
         color: #fff;
@@ -137,7 +137,9 @@
 
       /* --- ゲーム画面 --- */
       #game-container {
-        position: relative;
+        position: fixed;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
         display: none;
@@ -371,6 +373,27 @@
         color: #000;
       }
 
+      #life-bar-container {
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 300px;
+        height: 15px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        z-index: 101;
+      }
+
+      #life-bar {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+        transition: width 0.3s ease;
+      }
+
       #combo-container {
         position: absolute;
         top: 35%;
@@ -508,6 +531,10 @@
           </div>
         </div>
 
+        <div id="life-bar-container">
+          <div id="life-bar"></div>
+        </div>
+
         <div id="combo-container">
           <div id="combo-num">0</div>
           <div id="combo-text">COMBO</div>
@@ -557,7 +584,6 @@
       const APPROACH_TIME = 1500;
       const SPAWN_LOOKAHEAD = 1500;
       const SPEED_PCT = HIT_POS_Y / APPROACH_TIME;
-      // ミス判定のマージンを判定窓(250ms)より広く取る
       const MISS_THRESHOLD = -300;
 
       const KEY_MAP = { d: "key1", f: "key2", j: "key3", k: "key4" };
@@ -571,6 +597,11 @@
       let score = 0,
         combo = 0,
         maxCombo = 0;
+      let judgementCounts = {};
+      let life = 5;
+      const MAX_LIFE = 10;
+      let endGameScheduled = false;
+
       let isPlaying = false;
       let animationId = null;
 
@@ -582,6 +613,7 @@
       const comboBox = document.getElementById("combo-container");
       const comboNum = document.getElementById("combo-num");
       const laneFlashes = document.querySelectorAll(".lane-flash");
+      const lifeBar = document.getElementById("life-bar");
 
       let activeKeys = new Set();
       let longNoteHold = { key1: null, key2: null, key3: null, key4: null };
@@ -637,6 +669,10 @@
         score = 0;
         combo = 0;
         maxCombo = 0;
+        judgementCounts = { PERFECT: 0, GREAT: 0, GOOD: 0, BAD: 0, MISS: 0 };
+        life = 5;
+        endGameScheduled = false;
+        updateLife(0);
         updateScore();
         comboBox.classList.remove("show");
 
@@ -717,13 +753,13 @@
       }
 
       function gameLoop() {
+        if (!isPlaying) return;
         animationId = requestAnimationFrame(gameLoop);
 
         drawVisualizer();
         updateParticles();
 
-        if (!isPlaying) return;
-        if (audio.paused) return;
+        if (audio.paused && isPlaying) return;
 
         const now = audio.currentTime * 1000;
 
@@ -742,29 +778,23 @@
         const toRemove = [];
 
         activeNotes.forEach((note, idx) => {
-          // 処理済み(Processed)ノートの片付け
           if (note.processed) {
-            // 成功(Hit)していて、ロングノートホールド中でなければ削除
             if (note.hit) {
               if (note.el) note.el.style.display = "none";
               if (longNoteHold[note.laneKey] !== note) {
                 toRemove.push(idx);
               }
             } else {
-              // Missしたノート: 透明にして画面外へ流す
               if (note.el) note.el.style.opacity = 0.3;
               const endT = note.start + note.dur;
               if (endT < now - 1000) toRemove.push(idx);
             }
-            // 位置計算だけ続ける(Miss用)
             if (note.hit && note.processed) return;
           }
 
-          // 位置計算
           const timeToHit = note.start - now;
           let currentTop = HIT_POS_Y - timeToHit * SPEED_PCT;
 
-          // ロングノートホールド中
           if (longNoteHold[note.laneKey] === note) {
             const endTime = note.start + note.dur;
             const remain = endTime - now;
@@ -778,14 +808,9 @@
               if (Math.random() > 0.5) spawnSparkle(note.laneKey);
             }
           } else {
-            // 通常移動
             if (note.el) {
               note.el.style.top = currentTop + "%";
-
-              // --- Miss判定 (ここが修正ポイント) ---
-              // まだHitしておらず、processedでもない場合
               if (!note.processed && !note.hit) {
-                // 時間超過でMiss
                 if (timeToHit < MISS_THRESHOLD) {
                   triggerMiss(note);
                 }
@@ -798,7 +823,27 @@
           removeNote(toRemove[i]);
         }
 
-        if (audio.ended) endGame();
+        const allNotesGone =
+          nextSpawnIdx === allNotes.length && activeNotes.length === 0;
+
+        if (allNotesGone && !endGameScheduled && isPlaying) {
+          endGameScheduled = true;
+          const timeToAudioEnd = (audio.duration - audio.currentTime) * 1000;
+          // Wait at least 2 seconds, or until the audio ends, whichever is longer.
+          const delay = Math.max(2000, timeToAudioEnd);
+
+          if (delay > 0 && isFinite(delay)) {
+            setTimeout(() => {
+              if (isPlaying) {
+                // Check if game wasn't aborted
+                endGame(false);
+              }
+            }, delay);
+          } else if (isPlaying) {
+            // If delay is 0 or invalid, end immediately
+            endGame(false);
+          }
+        }
       }
 
       function spawnNote(note) {
@@ -868,13 +913,19 @@
           document.getElementById("menu").style.display = "flex";
           requestAnimationFrame(visualLoop);
         };
-        document.getElementById("retry-btn").onclick = () => {
-          if (currentTrack) initGame(currentTrack);
+
+        const retryBtn = document.getElementById("retry-btn");
+        retryBtn.innerText = "Back to Menu";
+        retryBtn.onclick = () => {
+          document.getElementById("result-screen").style.display = "none";
+          document.getElementById("menu").style.display = "flex";
+          resetGame();
+          requestAnimationFrame(visualLoop);
         };
       }
 
       function handleInputStart(key) {
-        if (activeKeys.has(key)) return;
+        if (activeKeys.has(key) || !isPlaying) return;
         activeKeys.add(key);
 
         const idx = LANE_INDEX[key];
@@ -892,21 +943,27 @@
           const diff = Math.abs(target.start - now);
           let j = "BAD",
             pts = 0,
-            col = "#aaa";
+            col = "#aaa",
+            lifeChange = -1;
           if (diff < 50) {
             j = "PERFECT";
             pts = 500;
             col = "#f0f";
+            lifeChange = 2;
           } else if (diff < 120) {
             j = "GREAT";
             pts = 300;
             col = "#0ff";
+            lifeChange = 1;
           } else if (diff < 250) {
             j = "GOOD";
             pts = 100;
             col = "#0f0";
+            lifeChange = 0;
           }
 
+          judgementCounts[j]++;
+          updateLife(lifeChange);
           showFeedback(key, j, col);
           spawnHitEffect(key, col);
 
@@ -934,7 +991,6 @@
           const now = audio.currentTime * 1000;
           const end = note.start + note.dur;
 
-          // processed済みの場合はすでにCompleteしているので何もしない（重要）
           if (note.processed) {
             longNoteHold[key] = null;
             return;
@@ -954,9 +1010,9 @@
         note.processed = true;
         note.hit = true;
         if (note.el) note.el.style.display = "none";
-        addScore(500);
+        addScore(500); // Bonus for long note
+        updateLife(1); // Bonus life for completing
         showFeedback(note.laneKey, "COMPLETE", "#ff0");
-        // ホールド解除（重要：これをしないとhandleInputEndで再判定される恐れ）
         if (longNoteHold[note.laneKey] === note) {
           longNoteHold[note.laneKey] = null;
         }
@@ -972,6 +1028,8 @@
           longNoteHold[note.laneKey] = null;
 
         combo = 0;
+        judgementCounts.MISS++;
+        updateLife(-2);
         updateScore();
         showFeedback(note.laneKey, "MISS", "#555");
       }
@@ -1055,16 +1113,43 @@
         if (combo > 1) comboBox.classList.add("show");
       }
       function updateScore() {
-        scoreEl.innerText = score;
+        scoreEl.innerText = score.toString().padStart(7, "0");
       }
 
-      function endGame() {
+      function updateLife(change) {
+        life = Math.max(0, Math.min(MAX_LIFE, life + change));
+        const lifePct = (life / MAX_LIFE) * 100;
+        lifeBar.style.width = lifePct + "%";
+        if (life <= 0) {
+          gameOver();
+        }
+      }
+
+      function gameOver() {
+        if (!isPlaying) return;
+        audio.pause();
+        endGame(true);
+      }
+
+      function endGame(isGameOver = false) {
+        if (!isPlaying) return;
         stopGameLoop();
         isPlaying = false;
+
+        const resultTitle = document.querySelector("#result-screen h1");
+        resultTitle.innerText = isGameOver ? "GAME OVER" : "COMPLETE";
+
         document.getElementById("result-screen").style.display = "flex";
-        document.getElementById(
-          "result-stats"
-        ).innerHTML = `SCORE: ${score}<br>MAX COMBO: ${maxCombo}`;
+        document.getElementById("result-stats").innerHTML = `
+            SCORE: ${score}<br>
+            MAX COMBO: ${maxCombo}<br>
+            <br>
+            PERFECT: ${judgementCounts.PERFECT}<br>
+            GREAT: ${judgementCounts.GREAT}<br>
+            GOOD: ${judgementCounts.GOOD}<br>
+            BAD: ${judgementCounts.BAD}<br>
+            MISS: ${judgementCounts.MISS}
+        `;
       }
     </script>
   </body>
